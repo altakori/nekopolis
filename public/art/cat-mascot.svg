@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Nekopolis engineer cat mascot</title>
+  <desc id="desc">Original warm-dusk 2D orange engineer cat bust wearing a hard hat, industrial city-builder style, flat shapes and soft gradients on a transparent background.</desc>
+  <defs>
+    <linearGradient id="duskSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3a1d4a"/>
+      <stop offset="45%" stop-color="#c45c2a"/>
+      <stop offset="100%" stop-color="#f0a35a"/>
+    </linearGradient>
+    <linearGradient id="furMain" x1="20%" y1="10%" x2="80%" y2="95%">
+      <stop offset="0%" stop-color="#ffb56b"/>
+      <stop offset="55%" stop-color="#f08a32"/>
+      <stop offset="100%" stop-color="#c45e18"/>
+    </linearGradient>
+    <linearGradient id="furShade" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d96a1f"/>
+      <stop offset="100%" stop-color="#9a3f0c"/>
+    </linearGradient>
+    <linearGradient id="hatShell" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#f6d56a"/>
+      <stop offset="40%" stop-color="#e8a820"/>
+      <stop offset="100%" stop-color="#b66b0c"/>
+    </linearGradient>
+    <linearGradient id="hatBrim" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#d4a01a"/>
+      <stop offset="100%" stop-color="#8a5a08"/>
+    </linearGradient>
+    <linearGradient id="vest" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#5ec8e8"/>
+      <stop offset="100%" stop-color="#1f7fa8"/>
+    </linearGradient>
+    <linearGradient id="cityGlow" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#ff8a3a" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ff8a3a" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="cheek" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff7a5c" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ff7a5c" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- soft dusk disc (still transparent outside) -->
+  <circle cx="256" cy="268" r="210" fill="url(#duskSky)" opacity="0.18"/>
+
+  <!-- distant industrial skyline silhouette -->
+  <g fill="#2a1430" opacity="0.55">
+    <rect x="48" y="350" width="36" height="90" rx="2"/>
+    <rect x="90" y="320" width="28" height="120" rx="2"/>
+    <rect x="124" y="338" width="44" height="102" rx="2"/>
+    <rect x="178" y="300" width="32" height="140" rx="2"/>
+    <rect x="218" y="330" width="50" height="110" rx="2"/>
+    <rect x="278" y="310" width="38" height="130" rx="2"/>
+    <rect x="324" y="340" width="30" height="100" rx="2"/>
+    <rect x="362" y="292" width="42" height="148" rx="2"/>
+    <rect x="412" y="325" width="34" height="115" rx="2"/>
+    <rect x="452" y="355" width="24" height="85" rx="2"/>
+    <!-- cranes -->
+    <rect x="100" y="280" width="4" height="40"/>
+    <rect x="88" y="280" width="40" height="4"/>
+    <rect x="380" y="250" width="4" height="42"/>
+    <rect x="360" y="250" width="48" height="4"/>
+  </g>
+  <rect x="40" y="400" width="432" height="48" fill="url(#cityGlow)"/>
+
+  <!-- neck / bust -->
+  <ellipse cx="256" cy="430" rx="118" ry="54" fill="url(#furShade)"/>
+  <path d="M150 400 C170 360 200 340 256 338 C312 340 342 360 362 400 L340 470 C310 490 200 490 172 470 Z" fill="url(#furMain)"/>
+
+  <!-- safety vest -->
+  <path d="M168 400 C190 372 220 360 256 358 C292 360 322 372 344 400 L330 470 C300 492 212 492 182 470 Z" fill="url(#vest)" opacity="0.95"/>
+  <path d="M210 365 L230 470 L256 478 L282 470 L302 365 L256 378 Z" fill="#f4f7fa" opacity="0.92"/>
+  <path d="M232 390 L256 402 L280 390" fill="none" stroke="#f6c84c" stroke-width="6" stroke-linecap="round"/>
+  <path d="M236 420 L256 430 L276 420" fill="none" stroke="#f6c84c" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- head -->
+  <ellipse cx="256" cy="250" rx="128" ry="118" fill="url(#furMain)"/>
+  <ellipse cx="256" cy="268" rx="100" ry="88" fill="#ffc48a" opacity="0.35"/>
+
+  <!-- ears -->
+  <path d="M150 180 L128 78 L210 148 Z" fill="url(#furMain)"/>
+  <path d="M162 168 L148 104 L198 148 Z" fill="#f4a0a8"/>
+  <path d="M362 180 L384 78 L302 148 Z" fill="url(#furMain)"/>
+  <path d="M350 168 L364 104 L314 148 Z" fill="#f4a0a8"/>
+  <!-- ear rim shade -->
+  <path d="M150 180 L128 78 L160 140" fill="url(#furShade)" opacity="0.45"/>
+  <path d="M362 180 L384 78 L352 140" fill="url(#furShade)" opacity="0.45"/>
+
+  <!-- hard hat -->
+  <path d="M150 188 C160 120 200 88 256 84 C312 88 352 120 362 188 C320 170 192 170 150 188 Z" fill="url(#hatShell)"/>
+  <ellipse cx="256" cy="188" rx="132" ry="28" fill="url(#hatBrim)"/>
+  <path d="M188 150 C210 118 236 108 256 106 C276 108 302 118 324 150 C300 138 212 138 188 150 Z" fill="#ffe08a" opacity="0.55"/>
+  <!-- hat ridge / badge -->
+  <rect x="236" y="112" width="40" height="58" rx="10" fill="#d49212"/>
+  <circle cx="256" cy="138" r="14" fill="#2b6f8a"/>
+  <path d="M248 138 L254 144 L266 130" fill="none" stroke="#f6f3e8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- forehead tuft -->
+  <path d="M230 176 C240 156 252 150 256 150 C260 150 272 156 282 176 C268 168 244 168 230 176 Z" fill="url(#furShade)" opacity="0.35"/>
+
+  <!-- eyes -->
+  <ellipse cx="208" cy="248" rx="28" ry="32" fill="#1a1020"/>
+  <ellipse cx="304" cy="248" rx="28" ry="32" fill="#1a1020"/>
+  <ellipse cx="208" cy="248" rx="18" ry="22" fill="#7dffb2"/>
+  <ellipse cx="304" cy="248" rx="18" ry="22" fill="#7dffb2"/>
+  <ellipse cx="208" cy="248" rx="10" ry="14" fill="#143d2a"/>
+  <ellipse cx="304" cy="248" rx="10" ry="14" fill="#143d2a"/>
+  <circle cx="214" cy="240" r="5" fill="#f8fff4"/>
+  <circle cx="310" cy="240" r="5" fill="#f8fff4"/>
+  <!-- brow -->
+  <path d="M178 220 Q208 208 238 218" fill="none" stroke="#a34a12" stroke-width="6" stroke-linecap="round"/>
+  <path d="M274 218 Q304 208 334 220" fill="none" stroke="#a34a12" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- cheeks -->
+  <circle cx="176" cy="288" r="22" fill="url(#cheek)"/>
+  <circle cx="336" cy="288" r="22" fill="url(#cheek)"/>
+
+  <!-- nose / muzzle -->
+  <ellipse cx="256" cy="300" rx="48" ry="36" fill="#ffe0b8"/>
+  <path d="M244 292 C248 284 264 284 268 292 C262 304 250 304 244 292 Z" fill="#e786a0"/>
+  <path d="M256 300 L256 318" stroke="#c45e18" stroke-width="3" stroke-linecap="round"/>
+  <path d="M256 318 Q236 332 214 324" fill="none" stroke="#a34a12" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M256 318 Q276 332 298 324" fill="none" stroke="#a34a12" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- whiskers -->
+  <g stroke="#6b3a14" stroke-width="2.5" stroke-linecap="round" opacity="0.75">
+    <path d="M200 300 L120 286"/>
+    <path d="M200 310 L118 310"/>
+    <path d="M202 320 L124 334"/>
+    <path d="M312 300 L392 286"/>
+    <path d="M312 310 L394 310"/>
+    <path d="M310 320 L388 334"/>
+  </g>
+
+  <!-- collar / tool strap accent -->
+  <path d="M186 386 C210 402 302 402 326 386" fill="none" stroke="#2b3a44" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="256" cy="398" r="10" fill="#f0c14a" stroke="#8a5a08" stroke-width="3"/>
+
+  <!-- small wrench badge on vest -->
+  <g transform="translate(300 430) rotate(-35)">
+    <rect x="-4" y="-18" width="8" height="36" rx="3" fill="#d8dee6"/>
+    <circle cx="0" cy="-18" r="8" fill="none" stroke="#d8dee6" stroke-width="5"/>
+    <circle cx="0" cy="18" r="6" fill="#9aa3ad"/>
+  </g>
+</svg>
