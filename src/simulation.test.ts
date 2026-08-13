@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {W,initialState,build,bulldoze,step,dragLine,utilityConnected,footprintCells,idx,type State,type BuildingKind} from './simulation';
+import {W,initialState,build,bulldoze,step,dragLine,utilityConnected,footprintCells,idx,migrateState,type State,type BuildingKind} from './simulation';
 
 const empty=()=>{const s=initialState();s.grid.fill(null);return s};
 const put=(s:State,kind:BuildingKind,x:number,y:number)=>{const i=idx(x,y);s.grid[i]={kind,age:0,anchor:i};return i};
@@ -22,7 +22,12 @@ describe('network semantics',()=>{
 describe('interacting city economy',()=>{
  it('does not produce clean water without powered intake and purifier chain',()=>{let s=empty();put(s,'intake',0,0);put(s,'pipe',1,0);put(s,'purifier',2,0);s=runCycle(s);expect(s.rates.water).toBe(0);expect(s.resources.water).toBe(0)});
  it('calculates power capacity and clean water through independently connected utilities',()=>{let s=runCycle(utilities());expect(s.rates.power).toBe(24);expect(s.rates.water).toBe(12);expect(s.resources.power).toBe(18);expect(s.resources.water).toBe(12)});
+ it('does not count a plant without an adjacent connected wire',()=>{let s=utilities();put(s,'plant',15,10);s=runCycle(s);expect(s.rates.power).toBe(24);expect(s.resources.power).toBe(18)});
  it('blocks a field without road, then produces when road and clean pipe serve it',()=>{let s=utilities();put(s,'pipe',4,3);const field=put(s,'field',3,3);s=runCycle(s);expect(s.diagnostics[field].bottleneck).toBe('도로 접근 없음');const before=s.resources.catnip;put(s,'road',3,4);s=runCycle(s);expect(s.resources.catnip).toBe(before+3);expect(s.diagnostics[field].online).toBe(true)});
  it('feed factory consumes catnip and reports its bottleneck when stock is gone',()=>{let s=utilities();s.resources.population=10;s.resources.catnip=3;put(s,'pipe',4,3);put(s,'pipe',5,3);const factory=put(s,'feed',6,3);put(s,'road',6,4);s=runCycle(s);expect(s.resources.feed).toBe(4);expect(s.resources.catnip).toBe(0);s=runCycle(s);expect(s.diagnostics[factory].bottleneck).toBe('캣닢 원료 부족')});
  it('population is capped by both housing and food support',()=>{let s=utilities();s.resources.population=4;s.resources.feed=20;put(s,'pipe',4,3);put(s,'pipe',5,3);put(s,'dorm',6,3);put(s,'road',6,4);s=runCycle(s);expect(s.resources.population).toBe(5);s.resources.feed=0;s=runCycle(s);expect(s.resources.population).toBe(4)});
+});
+
+describe('save migration',()=>{
+ it('normalizes malformed scalar and resource values',()=>{const migrated=migrateState({grid:Array(W*14).fill(null),resources:{coins:'oops',population:-4,happiness:999},speed:99,tick:-2,day:'bad',paused:'yes'});expect(migrated.resources.coins).toBe(900);expect(migrated.resources.population).toBe(0);expect(migrated.resources.happiness).toBe(100);expect(migrated.speed).toBe(3);expect(migrated.tick).toBe(0);expect(migrated.day).toBe(1);expect(migrated.paused).toBe(false)});
 });

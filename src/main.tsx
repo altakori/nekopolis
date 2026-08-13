@@ -1,12 +1,12 @@
 import React,{useCallback,useEffect,useRef,useState} from 'react';
 import{createRoot}from'react-dom/client';
 import'./styles.css';
-import{W,H,initialState,step,build,bulldoze,LABEL,DESC,COST,dragLine,footprint,utilityConnected,type BuildingKind,type State,type ResourceKey}from'./simulation';
+import{W,H,initialState,migrateState,step,build,bulldoze,LABEL,DESC,COST,dragLine,footprint,utilityConnected,type BuildingKind,type State,type ResourceKey}from'./simulation';
 
 const tools:BuildingKind[]=['road','wire','pipe','field','farm','plant','intake','purifier','feed','workshop','dorm','plaza'];
 const icons:Record<BuildingKind,string>={road:'▱',wire:'⌁',pipe:'≈',field:'✿',farm:'♧',plant:'◒',intake:'◉',purifier:'◌',feed:'▤',workshop:'⌂',dorm:'▥',plaza:'✦'};
 const colors:Record<BuildingKind,string>={road:'#778c98',wire:'#35e4c0',pipe:'#61bff1',field:'#78bf5b',farm:'#c69255',plant:'#eb765c',intake:'#3e9bdd',purifier:'#64ced3',feed:'#de704f',workshop:'#bf70ae',dorm:'#7079d5',plaza:'#edbd65'};
-function loadState():State{const base=initialState();try{const raw=JSON.parse(localStorage.getItem('nekopolis-save')||'null');if(!raw||!Array.isArray(raw.grid)||raw.grid.length!==W*H)return base;const grid=raw.grid.map((c:{kind?:BuildingKind;age?:number;anchor?:number}|null,i:number)=>c&&tools.includes(c.kind as BuildingKind)?{kind:c.kind as BuildingKind,age:Number(c.age)||0,anchor:Number.isInteger(c.anchor)?c.anchor!:i}:null);return{...base,...raw,grid,resources:{...base.resources,...raw.resources},rates:{...base.rates,...raw.rates},diagnostics:raw.diagnostics||{},log:Array.isArray(raw.log)?raw.log:base.log}}catch{return base}}
+function loadState():State{try{return migrateState(JSON.parse(localStorage.getItem('nekopolis-save')||'null'))}catch{return initialState()}}
 
 function App(){
  const canvas=useRef<HTMLCanvasElement>(null);const dragRef=useRef(false),startRef=useRef<number|null>(null);const[s,setS]=useState<State>(loadState);const[tool,setTool]=useState<BuildingKind>('road');const[hover,setHover]=useState<number|null>(null);const[selected,setSelected]=useState<number|null>(null);const[zoom,setZoom]=useState(1);const[pan,setPan]=useState({x:0,y:0});const[panMode,setPanMode]=useState(false);
