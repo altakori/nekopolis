@@ -207,6 +207,47 @@ git ls-remote --heads origin feat/nekopolis-foundry
 - 390px 기본 지도 배율 120%, 산·강·스타터 시설·줌 컨트롤 clipping 없음
 - 시각 증거: `qa-art/continuous-terrain-desktop-final.png`, `qa-art/continuous-terrain-mobile-final.png` (Git 비추적)
 
+## 2026-08-14 — 거시 시스템·UI 통합 리디자인
+
+### 왜 국소 패치를 중단했는가
+
+- 첫 화면에 자원 9개와 건설 도구 12개가 같은 중요도로 노출되어 다음 행동을 알 수 없었다.
+- 390×844 첫 화면에서는 건설 도구가 하나도 보이지 않았고 지도와 팔레트가 긴 페이지로 분리됐다.
+- 문서는 도시 단계와 해금을 약속했지만 실제로는 모든 시설이 처음부터 열려 있었다.
+- 사료는 생산됐지만 시민이 소비하지 않아 생산망을 한 번만 돌리면 되는 죽은 경제였다.
+- 2×2 건물은 보이는 footprint와 달리 앵커 셀 연결만 인정해 불공정한 단절이 발생했다.
+- Canvas의 부드러운 지형, 절차적 건물, 차가운 HTML 대시보드, Grok 마스코트가 서로 다른 제품처럼 보였다.
+
+### 채택한 통합 해법
+
+- `docs/COHESIVE_REDESIGN.md`에 지도 우선, 점진적 복잡도, 행동-결과 직결 원칙과 실패 게이트를 먼저 고정했다.
+- 기반선→첫 수확→정착→자립의 4개 단조 증가 계약과 단계별 영구 해금을 simulation에 구현했다.
+- 시민은 매 생산 사이클 `ceil(인구/4)` 사료를 소비하고, 부족하면 행복과 인구가 하락한다.
+- 노동의 숨은 고정 순서를 플레이어가 선택하는 균형/식량/재료 우선 교대로 노출했다.
+- 취수장은 실제 동쪽 강변에서만 건설되며, 2×2 시설은 footprint 어느 면에 닿아도 연결된다.
+- 3열 대시보드를 map-first command bar + 임무 overlay + 하단 dock + context inspector로 교체했다.
+- Unicode 팔레트 아이콘을 동일 stroke의 인라인 SVG 아이콘으로 교체하고 Grok 마스코트를 현장 감독으로 실제 UI에 연결했다.
+- 모바일은 100svh 안에서 지도·임무·건설 dock을 동시에 유지하고 주요 조작을 최소 44px로 맞췄다.
+
+### 폐기한 대안
+
+- 기존 9개 자원 카드와 좌우 패널을 CSS로만 미화: 정보 구조 문제를 보존하므로 폐기.
+- 모든 시설을 유지한 채 추천 배지만 추가: 실제 해금과 단계감이 없어 폐기.
+- 사료 재고 존재 여부만 인구 조건으로 사용: 반복 생산 병목이 생기지 않아 폐기.
+- 모바일에 데스크톱 패널을 세로로 재배치: 지도와 도구가 다시 분리되어 폐기.
+
+### 검증 기준선
+
+- 자동 테스트 22개: 네트워크 의미, 전선·수도관 양방향 분리와 교차 endpoint 거부, 거리 가격, footprint 연결, 강변 제한, 실제 사료 소비, 단계 영속성, 노동 우선순위 포함.
+- 1440×900에서 Canvas가 viewport 약 65%, 페이지 수평 overflow 0.
+- 390×844에서 Canvas·임무·하단 dock이 한 화면에 있고 페이지 높이 844px, 수평 overflow 0.
+- 잠긴 캣닢 밭은 계약 1에서 비활성, 잘못된 취수 위치는 강변 필요 메시지 표시.
+- 실제 전선 시공 후 발전소 송전 체크와 PWR 생산량이 동일 사이클에 반영됨.
+- 전선·수도관은 서로 endpoint로도 인정하지 않으며 양방향 비전도 회귀 테스트로 고정함.
+- 선로는 평상시 숨기고 발전소·정수장 선택 시 연결된 동일 종류 망만 glow하며, 해당 도구 시공 중에는 저채도 preview를 표시함.
+- 도로·전선·수도관 가격은 드래그 기하 거리 × 단가를 `Math.floor` 처리하며 시설 endpoint는 거리점으로만 사용함.
+- 시각 증거: `qa-art/cohesive-desktop-default.png`, `qa-art/cohesive-mobile-default.png`, `qa-art/cohesive-desktop-play.png`, `qa-art/networks-hidden.png`, `qa-art/power-network-glow.png`, `qa-art/water-network-glow.png` (Git 비추적).
+
 ## 11. 도로 연결과 하천 자연화 수정
 
 후속 플레이 피드백에서 도로가 셀마다 끊겨 보이고, 강이 굵은 외곽선과 반복 점선 때문에 인공 수로처럼 보이는 문제가 확인됐다. 렌더링의 원인을 다음처럼 수정했다.
@@ -226,3 +267,29 @@ git ls-remote --heads origin feat/nekopolis-foundry
 - 일반 휠 페이지 스크롤과 Ctrl+휠 지도 확대를 분리 확인
 - `npm test` 13/13, `npm run typecheck`, `npm run build`, `git diff --check` 통과
 - 시각 증거: `qa-art/roads-river-connected-desktop.png`, `qa-art/roads-river-connected-mobile.png`, `qa-art/road-network-final2.png` (Git 비추적)
+
+## 12. 직선 관로·외부 도시·고양이 회관
+
+후속 플레이 피드백에서 관로가 타일 픽셀에 묶이고, 2×2 점유 면적과 고양이 인구/노동 구조가 불명확한 문제가 확인됐다. 다음 구조로 교체했다.
+
+- 전선·수도관을 `grid` 점유 셀에서 별도 직선 segment graph로 이전
+- 시작점과 끝점만 같은 종류 선로를 연결하며, 중간 타일·건물·반대 관로를 관통
+- 기하 교차는 연결되지 않고 shared endpoint만 연결되는 네트워크 판정
+- 설치 중 endpoint-to-endpoint 밝은 glow, 평상시 숨김, 시설 선택 시 해당 연결망만 glow
+- 기존 grid 기반 전선·수도관 저장을 vector segment로 자동 마이그레이션
+- 서쪽 경계에 철거 불가 바깥 도시 도로 관문 추가
+- 관문부터 연속 연결된 도로만 시설 접근과 숙소 이주를 인정
+- 현재 고양이, 최대 고양이, 가용 노동력을 별도 자원과 HUD로 분리
+- 외부도로 연결 숙소마다 노동력 +2, 회관 레벨마다 최대 고양이 +4
+- 고양이 회관 LV.1–3과 코인·가용 전력·정수·노동·외부도로 업그레이드 게이트
+- 2×2 hover 4칸 채색, 완공 기초판, 선택 4칸 outline, 회관 레벨 표기
+
+검증:
+
+- `npm test`: 24/24 통과
+- `npm run typecheck`: 통과
+- `npm run build`: 통과
+- 실제 전선 드래그: grid utility 0개, 단일 vector segment, 8 거리·16코인 정확히 차감
+- 회관 UI 업그레이드: LV.1→2, 네 footprint 셀 동기화, 최대 8→12, 120코인 차감
+- 데스크톱/390px 수평 오버플로 0px, 모바일 최소 버튼 44px, 콘솔 오류 0건
+- 시각 증거: `qa-art/vector-wire-preview.png`, `qa-art/vector-power-glow.png`, `qa-art/hall-footprint-hover.png`, `qa-art/hall-inspector.png`, `qa-art/hall-upgraded-lv2.png`, `qa-art/vector-mobile.png` (Git 비추적)
