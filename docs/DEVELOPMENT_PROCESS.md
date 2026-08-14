@@ -206,3 +206,23 @@ git ls-remote --heads origin feat/nekopolis-foundry
 - 데스크톱/390px 브라우저 콘솔 오류 0건, 실패 요청 0건, 수평 오버플로 0px
 - 390px 기본 지도 배율 120%, 산·강·스타터 시설·줌 컨트롤 clipping 없음
 - 시각 증거: `qa-art/continuous-terrain-desktop-final.png`, `qa-art/continuous-terrain-mobile-final.png` (Git 비추적)
+
+## 11. 도로 연결과 하천 자연화 수정
+
+후속 플레이 피드백에서 도로가 셀마다 끊겨 보이고, 강이 굵은 외곽선과 반복 점선 때문에 인공 수로처럼 보이는 문제가 확인됐다. 렌더링의 원인을 다음처럼 수정했다.
+
+- 도로를 셀별 짧은 가로선으로 그리지 않고 실제 상하좌우 인접 도로의 중심을 직접 연결
+- 직선·코너·분기·교차로가 같은 넓은 노면 스트립을 공유하도록 변경
+- 도로 셀마다 있던 타원 패드를 제거해 캡슐 체인처럼 보이던 문제 해소
+- 강을 landmass 경계로 clip해 지도 밖의 둥근 stroke 끝이 보이지 않도록 변경
+- 강 경로를 동쪽 저지대와 취수장 옆을 지나는 완만한 흐름으로 재설계
+- 주황색에 가까운 둑과 도로 중앙선처럼 보이던 반복 수면 점선을 제거
+- 굽이별 갈대·바위·드문 반사광만 남겨 자연 하천의 밀도와 방향감을 표현
+
+검증:
+
+- 분기 도로 QA 상태에서 모든 인접 셀의 center-to-center 연결과 코너·교차로 연속성 확인
+- 데스크톱/390px 콘솔 오류 0건, 실패 요청 0건, 수평 오버플로 0px
+- 일반 휠 페이지 스크롤과 Ctrl+휠 지도 확대를 분리 확인
+- `npm test` 13/13, `npm run typecheck`, `npm run build`, `git diff --check` 통과
+- 시각 증거: `qa-art/roads-river-connected-desktop.png`, `qa-art/roads-river-connected-mobile.png`, `qa-art/road-network-final2.png` (Git 비추적)

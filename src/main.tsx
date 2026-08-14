@@ -19,8 +19,12 @@ function App(){
   ctx.fillStyle='#071722';ctx.fillRect(0,0,w,h);const sky=ctx.createLinearGradient(0,0,0,h*.72);sky.addColorStop(0,'#425b61');sky.addColorStop(.48,'#173840');sky.addColorStop(1,'#091d29');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
   drawContinuousTerrain(ctx,g,(x,y)=>screen(x,y,g),s.tick,hover!==null);
   const power=utilityConnected(s.grid,'wire',['plant']),water=utilityConnected(s.grid,'pipe',['intake']);
-  // connected road strips blend into the slab instead of floating foundations.
-  const roads=s.grid.map((c,i)=>c?.kind==='road'?i:null).filter((v):v is number=>v!==null);ctx.save();ctx.globalAlpha=.82;for(const i of roads){const x=i%W,y=Math.floor(i/W),[px,py]=screen(x,y,g);path([px-g.tw*.4,py,px-g.tw*.12,py-g.th*.02,px+g.tw*.16,py,px+g.tw*.4,py],Math.max(4,g.tw*.24),'#6d7770');path([px-g.tw*.33,py-g.th*.01,px,py-g.th*.01,px+g.tw*.33,py-g.th*.01],Math.max(1,g.tw*.035),'#e0c68b')}ctx.restore();
+  // Roads follow actual grid neighbours: every strip runs centre-to-centre, so
+  // straight runs, corners and junctions remain physically continuous.
+  const roads=s.grid.map((c,i)=>c?.kind==='road'?i:null).filter((v):v is number=>v!==null),roadSet=new Set(roads),roadLinks:[number,number][]=[];
+  for(const i of roads){const x=i%W,y=Math.floor(i/W);if(x+1<W&&roadSet.has(i+1))roadLinks.push([i,i+1]);if(y+1<H&&roadSet.has(i+W))roadLinks.push([i,i+W])}
+  const roadSegment=(a:number,b:number)=>{const ax=a%W,ay=Math.floor(a/W),bx=b%W,by=Math.floor(b/W),p=screen(ax,ay,g),q=screen(bx,by,g);ctx.lineCap='round';ctx.strokeStyle='#183432aa';ctx.lineWidth=Math.max(14,g.tw*.5);ctx.beginPath();ctx.moveTo(...p);ctx.lineTo(...q);ctx.stroke();ctx.strokeStyle='#827461';ctx.lineWidth=Math.max(9,g.tw*.34);ctx.stroke()};
+  ctx.save();ctx.globalAlpha=.96;for(const[a,b]of roadLinks)roadSegment(a,b);for(const i of roads){const degree=roadLinks.filter(([a,b])=>a===i||b===i).length;if(degree)continue;const x=i%W,y=Math.floor(i/W),[px,py]=screen(x,y,g);ctx.fillStyle='#827461';ctx.beginPath();ctx.ellipse(px,py,Math.max(7,g.tw*.19),Math.max(4,g.th*.38),0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#c3b78b70';ctx.lineWidth=1;ctx.stroke()}ctx.restore();
   for(let i=0;i<s.grid.length;i++){
    const cell=s.grid[i];if(!cell||cell.anchor!==i)continue;
    const x=i%W,y=Math.floor(i/W),size=footprint(cell.kind),[px,py]=screen(x,y,g),unit=Math.max(8,g.tw*.16);
@@ -43,7 +47,7 @@ function App(){
    else{ctx.fillRect(-unit,-g.th*.62,unit*2,g.th*.55);ctx.shadowBlur=0;ctx.fillStyle='#fff0ae';ctx.font=`${Math.max(11,g.tw*.18)}px Segoe UI`;ctx.textAlign='center';ctx.fillText(icons[cell.kind],0,-g.th*.3)}
    ctx.restore();if(power.has(i)||water.has(i)){ctx.strokeStyle=power.has(i)?'#45e5c766':'#6ebfff66';ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,py-g.th*.2,g.tw*.38,0,Math.PI*2);ctx.stroke()}if(selected===i)diamond(x,y,'#ffd08b',.95);
   }
-  for(let n=0;n<Math.min(7,roads.length);n++){const i=roads[(Math.floor(s.tick/2)+n*7)%roads.length],x=i%W,y=Math.floor(i/W), [px,py]=screen(x,y,g),phase=(s.tick*.08+n*.9)%1;ctx.fillStyle=n%2?'#f4a26f':'#f4d28b';ctx.beginPath();ctx.arc(px+(phase-.5)*g.tw*.55,py-g.th*.3-Math.sin(phase*Math.PI)*g.th*.18,Math.max(3,g.tw*.065),0,Math.PI*2);ctx.fill()}
+  for(let n=0;n<Math.min(5,roadLinks.length);n++){const[a,b]=roadLinks[(Math.floor(s.tick/8)+n*5)%roadLinks.length],p=screen(a%W,Math.floor(a/W),g),q=screen(b%W,Math.floor(b/W),g),phase=(s.tick*.055+n*.31)%1,px=p[0]+(q[0]-p[0])*phase,py=p[1]+(q[1]-p[1])*phase;ctx.fillStyle=n%2?'#f4a26f':'#f4d28b';ctx.shadowColor='#09191d';ctx.shadowBlur=3;ctx.beginPath();ctx.arc(px,py-g.th*.28,Math.max(3,g.tw*.06),0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}
   if(hover!==null){const x=hover%W,y=Math.floor(hover/W);diamond(x,y,s.grid[hover]?'#ff8866':'#b9ffe3',.95)}
  },[geo,screen,s,hover,selected]);
  useEffect(()=>{const id=setInterval(()=>setS(x=>{let n=x;for(let i=0;i<x.speed;i++)n=step(n);return n}),1000);return()=>clearInterval(id)},[]);useEffect(()=>{localStorage.setItem('nekopolis-save',JSON.stringify(s));draw()},[s,draw]);

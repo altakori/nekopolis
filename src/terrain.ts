@@ -32,21 +32,20 @@ export function drawContinuousTerrain(ctx:CanvasRenderingContext2D,g:TerrainGeom
  for(let x=0;x<=20;x++){const a=screen(x,0),b=screen(x,14);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke()}
  for(let y=0;y<=14;y++){const a=screen(0,y),b=screen(20,y);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke()}ctx.restore();
 
- // One continuous river: deep bank shadow, earth bank, water body, current and foam.
- const riverWorld:[[number,number],[number,number],[number,number],[number,number],[number,number],[number,number]]=[[19,-1],[15.4,1.1],[14.2,3.2],[15.6,5.7],[14.1,8.5],[14.7,14.8]];
+ // A restrained river follows the eastern lowland. The broad, slow bends keep
+ // it embedded in the terrain instead of reading as a pipe laid over the map.
+ const riverWorld:[[number,number],[number,number],[number,number],[number,number],[number,number],[number,number],[number,number],[number,number],[number,number]]=[[21.4,-1.4],[19.2,-.2],[17.1,1],[15.2,2.5],[15.1,4.5],[15.7,6.8],[16.1,9.2],[16.45,12],[16.8,15.4]];
  const river=riverWorld.map(([x,y])=>screen(x,y));
- ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
- pathThrough(ctx,river);ctx.strokeStyle='#173b3d99';ctx.lineWidth=g.tw*2.3;ctx.stroke();
- pathThrough(ctx,river);ctx.strokeStyle='#a7895e';ctx.lineWidth=g.tw*2.05;ctx.stroke();
- const water=ctx.createLinearGradient(river[0][0],river[0][1]-g.th,river[0][0],river[0][1]+g.th);water.addColorStop(0,'#2d8792');water.addColorStop(.5,'#17677d');water.addColorStop(1,'#0c445d');
- pathThrough(ctx,river);ctx.strokeStyle=water;ctx.lineWidth=g.tw*1.72;ctx.stroke();
- for(let lane=-1;lane<=1;lane++){
-  const shifted=river.map(([x,y],i)=>[x+Math.sin(tick*.045+i*1.7+lane)*g.tw*.08,y+lane*g.th*.36]as const);
-  pathThrough(ctx,shifted);ctx.strokeStyle=lane===0?'#99e2da88':'#d4f4df42';ctx.lineWidth=Math.max(1.2,g.tw*.025);ctx.setLineDash([g.tw*.45,g.tw*.34]);ctx.lineDashOffset=-tick*(1.1+lane*.12);ctx.stroke();
- }
- ctx.setLineDash([]);
- // Bank reeds and stone clusters use curved forms rather than square sprites.
- for(let i=0;i<river.length-1;i++)for(const side of[-1,1]){const[x,y]=river[i+1];const ox=side*g.tw*(.82+(i%2)*.08),oy=side*g.th*.55;ctx.strokeStyle=side>0?'#9fb55f':'#718c54';ctx.lineWidth=1.4;for(let r=0;r<4;r++){ctx.beginPath();ctx.moveTo(x+ox+r*3,y+oy);ctx.quadraticCurveTo(x+ox+r*3-2,y+oy-g.th*.35,x+ox+r*3+1,y+oy-g.th*.6);ctx.stroke()}}
+ ctx.save();ctx.beginPath();ctx.moveTo(top[0],top[1]);ctx.lineTo(right[0],right[1]);ctx.lineTo(bottom[0],bottom[1]);ctx.lineTo(left[0],left[1]);ctx.closePath();ctx.clip();ctx.lineCap='round';ctx.lineJoin='round';
+ pathThrough(ctx,river);ctx.strokeStyle='#173d3a7a';ctx.lineWidth=g.tw*1.68;ctx.stroke();
+ pathThrough(ctx,river);ctx.strokeStyle='#3f604d';ctx.lineWidth=g.tw*1.45;ctx.stroke();
+ pathThrough(ctx,river);ctx.strokeStyle='#6f8061';ctx.lineWidth=g.tw*1.26;ctx.stroke();
+ const water=ctx.createLinearGradient(0,river[0][1],0,river[river.length-1][1]);water.addColorStop(0,'#3a8990');water.addColorStop(.48,'#216b77');water.addColorStop(1,'#174f63');
+ pathThrough(ctx,river);ctx.strokeStyle=water;ctx.lineWidth=g.tw*1.12;ctx.stroke();
+ // Sparse reflections and eddies imply flow without becoming road-like lanes.
+ for(let i=1;i<river.length-1;i+=2){const prev=river[i-1],next=river[i+1],[x,y]=river[i],dx=next[0]-prev[0],dy=next[1]-prev[1],len=Math.hypot(dx,dy)||1,tx=dx/len,ty=dy/len,nx=-ty,ny=tx,w=g.tw*(.16+(i%3)*.035),drift=Math.sin(tick*.025+i)*g.th*.08;ctx.strokeStyle=i%4===1?'#c5e5d860':'#8ec7c052';ctx.lineWidth=Math.max(1,g.tw*.016);for(let ripple=-1;ripple<=1;ripple++){const off=ripple*g.th*.22+drift;ctx.beginPath();ctx.moveTo(x-tx*w+nx*off,y-ty*w+ny*off);ctx.quadraticCurveTo(x+nx*(off+g.th*.08),y+ny*(off+g.th*.08),x+tx*w+nx*off,y+ty*w+ny*off);ctx.stroke()}}
+ // Reeds follow each bend's true screen-space normal, avoiding parallel rows.
+ for(let i=1;i<river.length-1;i++)for(const side of[-1,1]){const prev=river[i-1],next=river[i+1],[x,y]=river[i],dx=next[0]-prev[0],dy=next[1]-prev[1],len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,offset=g.tw*(.65+(i%2)*.035),ox=nx*offset*side,oy=ny*offset*side;ctx.strokeStyle=side>0?'#9ead68':'#6f8a58';ctx.lineWidth=1.25;for(let r=0;r<3+(i%2);r++){const spread=(r-1.5)*g.tw*.045,bx=x+ox+dx/len*spread,by=y+oy+dy/len*spread;ctx.beginPath();ctx.moveTo(bx,by);ctx.quadraticCurveTo(bx-nx*side*2,by-g.th*.34,bx+nx*side*2,by-g.th*.62);ctx.stroke()}if(i%2===0){ellipse(ctx,x+ox+g.tw*.09,y+oy,g.tw*.07,g.th*.16,'#8b9079');ellipse(ctx,x+ox-g.tw*.08,y+oy+g.th*.04,g.tw*.05,g.th*.11,'#afb097')}}
  ctx.restore();
 
  // Layered mountain clusters sit on the far edge and span several cells.
