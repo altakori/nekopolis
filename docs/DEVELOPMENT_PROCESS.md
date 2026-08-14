@@ -183,3 +183,24 @@ git ls-remote --heads origin feat/nekopolis-foundry
 - [x] 테스트, 타입 검사, 빌드, 데스크톱/모바일 브라우저 QA가 통과한다.
 - [ ] 독립 reviewer gate의 v2 `APPROVE`를 받는다.
 - [ ] private GitHub 원격과 배포 상태를 최종 확인한다.
+
+## 10. 연속 지형 아트 패스
+
+사용자 피드백에서 기존 지형의 개별 마름모 칸이 서로 분리돼 보이고, 강과 산이 픽셀 타일처럼 단순하다는 문제가 확인됐다. `feat/continuous-terrain`에서는 시뮬레이션 좌표계를 유지하면서 렌더링만 다음처럼 재구성했다.
+
+- 전체 맵을 한 장의 연속된 아이소메트릭 landmass와 절벽 측면으로 렌더링
+- 유휴 격자 투명도를 3.5%로 낮추고 hover/건설 중에만 22% 가이드 표시
+- 취수장 옆에서 도시 가장자리를 따라 흐르는 연속 Bézier 강
+- 깊은 물·얕은 물·흙 둑·수면 흐름·거품·갈대와 반사 레이어
+- 여러 셀을 걸치는 산 능선, 암면 명암, 능선 하이라이트, 산기슭 관목
+- 결정적 수목·바위·초지·토양 패치로 중간 크기 지형 디테일 추가
+- 시설별 마름모 받침 제거, 흙/잔디 전이 패치와 접지 그림자로 교체
+- 도로·전선·수도관을 지면 위 연결 스트립과 animated pulse로 복구
+
+검증:
+
+- `npm test`: 13/13 통과
+- `npm run typecheck`: 통과
+- `npm run build`: 통과
+- 데스크톱/390px 브라우저 콘솔 오류 0건, 실패 요청 0건, 수평 오버플로 0px
+- 시각 증거: `qa-art/continuous-terrain-desktop-final.png`, `qa-art/continuous-terrain-mobile-final.png` (Git 비추적)
