@@ -196,6 +196,7 @@ git ls-remote --heads origin feat/nekopolis-foundry
 - 결정적 수목·바위·초지·토양 패치로 중간 크기 지형 디테일 추가
 - 시설별 마름모 받침 제거, 흙/잔디 전이 패치와 접지 그림자로 교체
 - 도로·전선·수도관을 지면 위 연결 스트립과 animated pulse로 복구
+- 720px 이하 화면은 기본 지도 배율을 120%로 높여 터치 배치 가독성을 확보하고, 데스크톱은 100% 유지
 
 검증:
 
@@ -203,4 +204,5 @@ git ls-remote --heads origin feat/nekopolis-foundry
 - `npm run typecheck`: 통과
 - `npm run build`: 통과
 - 데스크톱/390px 브라우저 콘솔 오류 0건, 실패 요청 0건, 수평 오버플로 0px
+- 390px 기본 지도 배율 120%, 산·강·스타터 시설·줌 컨트롤 clipping 없음
 - 시각 증거: `qa-art/continuous-terrain-desktop-final.png`, `qa-art/continuous-terrain-mobile-final.png` (Git 비추적)

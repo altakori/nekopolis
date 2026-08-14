@@ -6,8 +6,9 @@ const tools:BuildingKind[]=['road','wire','pipe','field','farm','plant','intake'
 const icons:Record<BuildingKind,string>={road:'▱',wire:'⌁',pipe:'≈',field:'✿',farm:'♧',plant:'◒',intake:'◉',purifier:'◌',feed:'▤',workshop:'⌂',dorm:'▥',plaza:'✦'};
 const colors:Record<BuildingKind,string>={road:'#778c98',wire:'#35e4c0',pipe:'#61bff1',field:'#78bf5b',farm:'#c69255',plant:'#eb765c',intake:'#3e9bdd',purifier:'#64ced3',feed:'#de704f',workshop:'#bf70ae',dorm:'#7079d5',plaza:'#edbd65'};
 function loadState():State{try{return migrateState(JSON.parse(localStorage.getItem('nekopolis-save')||'null'))}catch{return initialState()}}
+const defaultMapZoom=()=>window.innerWidth<=720?1.2:1;
 function App(){
- const canvas=useRef<HTMLCanvasElement>(null),dragRef=useRef(false),startRef=useRef<number|null>(null);const[s,setS]=useState<State>(loadState);const[tool,setTool]=useState<BuildingKind>('road');const[hover,setHover]=useState<number|null>(null);const[selected,setSelected]=useState<number|null>(null);const[zoom,setZoom]=useState(1);const[pan,setPan]=useState({x:0,y:0});const[panMode,setPanMode]=useState(false);
+ const canvas=useRef<HTMLCanvasElement>(null),dragRef=useRef(false),startRef=useRef<number|null>(null);const[s,setS]=useState<State>(loadState);const[tool,setTool]=useState<BuildingKind>('road');const[hover,setHover]=useState<number|null>(null);const[selected,setSelected]=useState<number|null>(null);const[zoom,setZoom]=useState(defaultMapZoom);const[pan,setPan]=useState({x:0,y:0});const[panMode,setPanMode]=useState(false);
  const geo=useCallback(()=>{const c=canvas.current!,r=c.getBoundingClientRect(),base=Math.min(r.width/(W+5),r.height/(H*.72));return{r,cx:r.width/2+pan.x,cy:r.height*.13+pan.y,tw:base*zoom,th:base*.38*zoom}},[pan,zoom]);
  const screen=useCallback((x:number,y:number,g=geo())=>[g.cx+(x-y)*g.tw*.52,g.cy+(x+y)*g.th*.9]as const,[geo]);
  const tile=useCallback((e:React.PointerEvent)=>{const g=geo(),x=e.clientX-g.r.left,y=e.clientY-g.r.top,dx=(x-g.cx)/(g.tw*.52),dy=(y-g.cy)/(g.th*.9),ix=Math.round((dx+dy)/2),iy=Math.round((dy-dx)/2);return ix>=0&&iy>=0&&ix<W&&iy<H?iy*W+ix:null},[geo]);
