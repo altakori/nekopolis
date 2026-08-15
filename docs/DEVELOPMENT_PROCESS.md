@@ -293,3 +293,28 @@ git ls-remote --heads origin feat/nekopolis-foundry
 - 회관 UI 업그레이드: LV.1→2, 네 footprint 셀 동기화, 최대 8→12, 120코인 차감
 - 데스크톱/390px 수평 오버플로 0px, 모바일 최소 버튼 44px, 콘솔 오류 0건
 - 시각 증거: `qa-art/vector-wire-preview.png`, `qa-art/vector-power-glow.png`, `qa-art/hall-footprint-hover.png`, `qa-art/hall-inspector.png`, `qa-art/hall-upgraded-lv2.png`, `qa-art/vector-mobile.png` (Git 비추적)
+
+## 13. 숙소 이주와 2×2 격자 정렬 수정
+
+후속 실제 플레이에서 숙소를 정상 연결해도 고양이가 늘지 않고, 2×2 건물 본체가 네 점유 칸 대신 anchor 한 칸 중심에 치우쳐 보이는 문제가 확인됐다.
+
+원인:
+
+- 최대 고양이 수가 회관으로만 증가해, 숙소가 온라인이어도 기본 최대치 4에 막혔다.
+- 2×2 건물 렌더링 중심이 anchor 좌표를 그대로 사용해 네 footprint 셀의 기하 중앙과 달랐다.
+- 평상시 footprint가 너무 희미해 완공 후 점유 칸을 읽기 어려웠다.
+
+수정:
+
+- 숙소마다 최대 고양이 +2를 제공한다.
+- 전력·정수·바깥 도시 도로가 모두 연결된 숙소는 사료 생산 전에도 숙소 보장 인구까지 이주를 시작한다.
+- 사료가 있으면 숙소와 회관이 합산한 전체 최대치까지 성장한다.
+- 2×2 건물 중심을 `(anchor x + 0.5, anchor y + 0.5)`로 이동한다.
+- 네 칸을 감싸는 외곽선과 내부 2×2 분할선을 상시 표시하고 선택 시 강조한다.
+
+검증:
+
+- 자동 테스트 26/26, TypeScript 검사, production build 통과
+- 실제 브라우저에서 `CATS 4→5→6`, `MAX 4→6`, `LAB 2→4` 확인
+- 숙소 진단: 전력·정수·외부도로 모두 online, 콘솔 오류 0건
+- 시각 증거: `qa-art/dorm-grid-alignment-final.png`, `qa-art/dorm-grid-alignment-selected.png` (Git 비추적)
