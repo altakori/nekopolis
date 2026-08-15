@@ -1,4 +1,10 @@
+import type{WarningKind}from'./simulation';
+
 export type RenderQuality='high'|'balanced'|'low';
+export type WarningBadge={kind:WarningKind;symbol:string;color:string};
+const WARNING_BADGES:Record<WarningKind,Omit<WarningBadge,'kind'>>={power:{symbol:'⚡!',color:'#d9a900'},water:{symbol:'💧!',color:'#278bc1'},labor:{symbol:'🐈!',color:'#b86542'},road:{symbol:'🛣!',color:'#756554'},input:{symbol:'📦!',color:'#8f596c'}};
+export const facilityWarningBadges=(warnings:WarningKind[]):WarningBadge[]=>warnings.map(kind=>({kind,...WARNING_BADGES[kind]}));
+
 export const targetFrameMs=(quality:RenderQuality,interactive=false)=>interactive?16:quality==='low'?36:33;
 
 export const canvasDpr=(cssWidth:number,deviceDpr:number)=>Math.min(Math.max(1,deviceDpr||1),cssWidth<=720?1.5:2);

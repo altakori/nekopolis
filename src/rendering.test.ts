@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {canvasDpr,nextRenderQuality,renderBudget,targetFrameMs} from './rendering';
+import {canvasDpr,facilityWarningBadges,nextRenderQuality,renderBudget,targetFrameMs} from './rendering';
 
 describe('render budget',()=>{
  it('caps high-density mobile canvases at DPR 1.5',()=>{
@@ -27,5 +27,14 @@ describe('render budget',()=>{
   expect(renderBudget('balanced',30)).toEqual({cats:10,carts:3,utilityPulses:2});
   expect(renderBudget('low',30)).toEqual({cats:3,carts:1,utilityPulses:1});
   expect(renderBudget('high',3).cats).toBe(3);
+ });
+ it('maps simultaneous shortages to ordered resource-specific warning badges',()=>{
+  expect(facilityWarningBadges(['power','water','labor','road','input'])).toEqual([
+   {kind:'power',symbol:'⚡!',color:'#d9a900'},
+   {kind:'water',symbol:'💧!',color:'#278bc1'},
+   {kind:'labor',symbol:'🐈!',color:'#b86542'},
+   {kind:'road',symbol:'🛣!',color:'#756554'},
+   {kind:'input',symbol:'📦!',color:'#8f596c'},
+  ]);
  });
 });

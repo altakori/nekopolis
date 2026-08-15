@@ -394,7 +394,7 @@ Grok 아트:
 
 검증:
 
-- `npm test`: 47/47 통과
+- `npm test`: 51/51 통과
 - `npm run typecheck`: 통과
 - `npm run build`: 통과
 - stage-4 desktop/mobile 기능 QA와 콘솔 오류 0건
@@ -403,3 +403,37 @@ Grok 아트:
 - desktop interaction QA: background 31.0fps → pointer 이동 63.7fps, active p95 21.8ms, paused drag event-to-frame p95 17.5ms, 7/7 preview frame 갱신
 - production HUD fixture: PWR `18/24` (`사용 6`), H₂O `7/12` (`사용 5`), `MAX CAT 4`, power token `#f2c94c`
 - 모바일 horizontal overflow 0, 보이는 버튼 최소 44px
+
+## 2026-08-16 · 관통 utility 연결과 다중 시설 경고
+
+전선·수도관 선분이 시설 footprint 타일 아래를 지나면 endpoint가 아니어도 해당 시설에 연결된다. source 시설도 선분 관통으로 망을 활성화할 수 있다. 다만 선분끼리는 계속 shared endpoint에서만 전도하므로 단순 기하 교차가 junction을 만들지 않으며 전선·수도관 layer도 독립이다. 기존 endpoint 인접 연결은 호환성을 위해 유지한다.
+
+단일 `!` 표식은 첫 bottleneck만 보여 여러 원인을 숨겼다. simulation diagnostics가 `power`, `water`, `labor`, `road`, `input`을 독립적으로 모두 기록하고 Canvas는 `⚡!`, `💧!`, `🐈!`, `🛣!`, `📦!` 색상 배지를 시설 옆에 수직 적층한다. 지도 상단에서는 stack 방향을 아래로 바꿔 clipping을 피한다.
+
+검증:
+
+- `npm test`: 51/51, typecheck, production build 통과
+- browser utility fixture: 선 중간 아래 plant→feed 전력 연결, intake→purifier 원수 연결
+- browser warning fixture: 5개 배지 동일 x축, 서로 다른 5개 y축, console 오류 0
+- screenshot: `qa-art/warning-stack.png`에서 겹침·clipping 없이 경고 구분
+- CPU 4×·390×844: 27.3fps, main-thread 69.7%, DPR 1.5, overflow 0
+- interaction: 62.7fps, active p95 21.1ms, paused drag p95 18.3ms, 7/7 preview 갱신
+
+## 2026-08-16 · 확장 마을, 숙소 progression, 주민 개체성
+
+플레이 구역을 20×14에서 24×18로 확장했다. 기존 저장은 reset하지 않고 old-width 좌표를 새 cell anchor와 utility endpoint index로 remap한다. 확대된 world에서 건물이 작아지지 않도록 desktop/mobile 기본 zoom을 각각 120%/135%로 조정하고 pan/zoom을 유지했다.
+
+숙소 LV.1–3 증축을 추가했다. 승인 시 코인·전력·물·가용 노동을 원자적으로 검사·차감하고 수용량은 2/4/7로 증가한다. 지도 sprite도 층수·창문·LV 표기가 함께 커진다.
+
+첫 밝은 잔디 pass는 사용자 피드백상 과도하게 밝아 즉시 폐기하고, 중간 명도 세이지 팔레트로 내렸다. 새 24×18 지형에는 강·산·나무·꽃·울타리·밭고랑을 재배치했다. 시설 본체를 확대하고 검은 기초판은 따뜻한 돌/흙 deck으로 바꾸며 기능 pictogram을 추가했다. 고양이는 치즈태비·턱시도·회색·삼색·크림 5 profile과 안전모·목도리·우편가방·정원모자, 체형·속도 차이를 갖는다.
+
+검증 결과:
+
+- `npm test`: 53/53 통과
+- `npm run typecheck`, `npm run build`, `git diff --check`: 통과
+- legacy 20×14 save 좌표 migration 및 current 24×18 utility browser fixture: 통과
+- 숙소 browser flow: LV.1→2, footprint 4칸 모두 LV.2, 90₩·전력 2·물 1·노동 1 차감, capacity +2
+- warning browser fixture: 5개 배지 동일 x축·서로 다른 y축, 관통 plant→feed 및 intake→purifier 연결, console 오류 0
+- CPU 4×·390×844: 27.4fps, main-thread 60.5%, adaptive `low`, DPR 1.5, horizontal overflow 0
+- desktop interaction: 61.8fps, active p95 18.1ms, paused drag p95 17.8ms, 7/7 preview frame 갱신
+- desktop/mobile final screenshot: 중간 명도 세이지, 밝은 기초판, 확대 시설, 경고 배지 가독성, release-blocking clipping 없음
