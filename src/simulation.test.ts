@@ -1,5 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {W,EXTERNAL_ROAD,initialState,build,buildLinear,buildIssue,bulldoze,step,dragLine,lineBuildCost,utilityConnected,footprintCells,footprintCenter,idx,migrateState,hallUpgradeIssue,upgradeHall,type State,type BuildingKind} from './simulation';
+import {terrainGridBounds} from './terrain';
 
 const empty=()=>{const s=initialState();s.grid.fill(null);return s};
 const put=(s:State,kind:BuildingKind,x:number,y:number)=>{const i=idx(x,y);s.grid[i]={kind,age:0,anchor:i,level:1};return i};
@@ -13,6 +14,7 @@ describe('construction and geometry',()=>{
  it('keeps the outside-city gateway road as permanent infrastructure',()=>{const s=initialState(),n=bulldoze(s,EXTERNAL_ROAD);expect(n.grid[EXTERNAL_ROAD]?.kind).toBe('road');expect(n).toBe(s)});
  it('builds a 2x2 anchored facility, charges once, and bulldozes from any part',()=>{const s=empty(),n=build(s,'plant',idx(2,2))!;expect(footprintCells(idx(2,2),2)).toEqual([idx(2,2),idx(3,2),idx(2,3),idx(3,3)]);expect(n.grid[idx(3,3)]?.anchor).toBe(idx(2,2));expect(n.resources.coins).toBe(810);const gone=bulldoze(n,idx(3,3));expect(gone.grid.filter(Boolean)).toHaveLength(0)});
  it('centers a 2x2 facility over all four occupied grid cells',()=>{expect(footprintCenter(idx(2,2),2)).toEqual({x:2.5,y:2.5});expect(footprintCenter(idx(2,2),1)).toEqual({x:2,y:2})});
+ it('aligns terrain edges and grid lines to the playable cell boundaries',()=>{expect(terrainGridBounds(20,14)).toEqual({minX:-.5,maxX:19.5,minY:-.5,maxY:13.5})});
  it('rejects wrapped, occupied, and unaffordable footprints',()=>{const s=empty();expect(build(s,'plant',idx(W-1,2))).toBeUndefined();put(s,'road',3,3);expect(build(s,'dorm',idx(2,2))).toBeUndefined();s.resources.coins=0;expect(build(s,'road',idx(1,1))).toBeUndefined()});
  it('interpolates continuous drag paths without duplicates',()=>{expect(dragLine(0,42)).toEqual([0,21,42]);expect(new Set(dragLine(0,42)).size).toBe(3)});
  it('prices a straight utility by endpoint distance and rounds down',()=>{const path=dragLine(idx(0,0),idx(2,2));expect(lineBuildCost('wire',path)).toBe(5);const built=buildLinear(empty(),'wire',path)!;expect(built.resources.coins).toBe(895);expect(built.utilities.wire).toEqual([{a:idx(0,0),b:idx(2,2)}]);expect(built.grid.filter(Boolean)).toHaveLength(0)});

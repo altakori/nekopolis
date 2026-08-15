@@ -1,5 +1,6 @@
 export type TerrainGeometry={tw:number;th:number};
 export type ScreenProjector=(x:number,y:number)=>readonly[number,number];
+export const terrainGridBounds=(columns:number,rows:number)=>({minX:-.5,maxX:columns-.5,minY:-.5,maxY:rows-.5});
 
 const pathThrough=(ctx:CanvasRenderingContext2D,points:readonly(readonly[number,number])[])=>{
  if(points.length<2)return;
@@ -16,7 +17,7 @@ const ellipse=(ctx:CanvasRenderingContext2D,x:number,y:number,rx:number,ry:numbe
 };
 
 export function drawContinuousTerrain(ctx:CanvasRenderingContext2D,g:TerrainGeometry,screen:ScreenProjector,tick:number,showGrid:boolean){
- const top=screen(-.55,-.55),right=screen(20.55,-.55),bottom=screen(20.55,14.55),left=screen(-.55,14.55);
+ const columns=20,rows=14,{minX,maxX,minY,maxY}=terrainGridBounds(columns,rows),top=screen(minX,minY),right=screen(maxX,minY),bottom=screen(maxX,maxY),left=screen(minX,maxY);
  const land=ctx.createLinearGradient(top[0],top[1],bottom[0],bottom[1]);land.addColorStop(0,'#56745b');land.addColorStop(.46,'#355f4e');land.addColorStop(1,'#264b42');
  // A single continuous landmass, including a softly lit visible cliff edge.
  ctx.fillStyle='#142f32';ctx.beginPath();ctx.moveTo(left[0],left[1]);ctx.lineTo(bottom[0],bottom[1]);ctx.lineTo(bottom[0],bottom[1]+g.th*1.35);ctx.lineTo(left[0],left[1]+g.th*1.35);ctx.closePath();ctx.fill();
@@ -29,8 +30,8 @@ export function drawContinuousTerrain(ctx:CanvasRenderingContext2D,g:TerrainGeom
 
  // The construction grid is a tool overlay, not the terrain texture.
  ctx.save();ctx.globalAlpha=showGrid?.22:.035;ctx.strokeStyle='#c5e3ca';ctx.lineWidth=showGrid?1:.6;
- for(let x=0;x<=20;x++){const a=screen(x,0),b=screen(x,14);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke()}
- for(let y=0;y<=14;y++){const a=screen(0,y),b=screen(20,y);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke()}ctx.restore();
+ for(let x=0;x<=columns;x++){const worldX=minX+x,a=screen(worldX,minY),b=screen(worldX,maxY);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke()}
+ for(let y=0;y<=rows;y++){const worldY=minY+y,a=screen(minX,worldY),b=screen(maxX,worldY);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke()}ctx.restore();
 
  // A restrained river follows the eastern lowland. The broad, slow bends keep
  // it embedded in the terrain instead of reading as a pipe laid over the map.

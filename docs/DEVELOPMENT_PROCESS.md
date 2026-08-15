@@ -318,3 +318,22 @@ git ls-remote --heads origin feat/nekopolis-foundry
 - 실제 브라우저에서 `CATS 4→5→6`, `MAX 4→6`, `LAB 2→4` 확인
 - 숙소 진단: 전력·정수·외부도로 모두 online, 콘솔 오류 0건
 - 시각 증거: `qa-art/dorm-grid-alignment-final.png`, `qa-art/dorm-grid-alignment-selected.png` (Git 비추적)
+
+## 14. 배경 지형 격자 경계 수정
+
+2×2 footprint 정렬 후 실제 화면에서 배경 지형 격자가 땅 외곽과 반 칸 이상 어긋난 문제가 드러났다.
+
+원인과 수정:
+
+- 유효 셀 중심은 `x=0..19`, `y=0..13`인데 땅 외곽은 `-0.55..20.55`, `-0.55..14.55`로 과도하게 확장되어 있었다.
+- 격자선이 셀 경계가 아닌 정수 좌표의 셀 중심을 통과했다.
+- 지형과 격자의 공통 경계를 `x=-0.5..19.5`, `y=-0.5..13.5`로 통일했다.
+- 시설을 선택한 뒤 남은 hover로 전체 격자가 켜지지 않도록, 빈 칸 배치 hover에서만 밝은 건설 격자를 표시한다.
+
+검증:
+
+- 자동 테스트 27/27, TypeScript 검사, production build 통과
+- idle·빈 칸 hover·숙소 선택 세 상태에서 지형 외곽과 격자 정렬 비교
+- 선택 상태에서는 배경 격자가 꺼지고 로컬 2×2 footprint만 유지
+- 데스크톱 수평 overflow 0, 콘솔 오류 0건
+- 시각 증거: `qa-art/terrain-grid-idle-fixed.png`, `qa-art/terrain-grid-hover-fixed.png`, `qa-art/terrain-grid-selected-fixed.png` (Git 비추적)
