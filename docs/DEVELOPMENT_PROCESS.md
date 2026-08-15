@@ -383,3 +383,23 @@ Grok 아트:
 후속 reviewer는 reduced-motion Canvas 시간이 `s.tick`에 연결되어 simulation tick마다 정지 화면이 바뀌는 문서-구현 불일치를 발견했다. reduced-motion의 animation time을 상수 0으로 분리해 실제 시간과 simulation tick 모두에서 미세 애니메이션이 완전히 고정되도록 수정했고, 1초 simulation tick을 넘기는 브라우저 frame hash 검증을 추가로 수행했다.
 
 다음 reviewer는 Canvas와 transition이 정지해도 배송 beacon의 CSS keyframe animation이 남는 접근성 누락을 발견했다. reduced-motion media query에서 CSS animation과 transition을 모두 전역 비활성화하고, 실제 브라우저 computed style에서 배송 beacon의 `animation-name: none`을 검증하도록 gate를 강화했다.
+
+## 2026-08-16 · 모바일 렌더 예산과 노동력 일관성 개선
+
+실측 baseline에서 desktop은 31.3fps였지만 DPR 3·CPU 4× 모바일은 16.7fps로 하락했다. 모바일 Canvas DPR을 1.5, desktop을 2로 제한하고 정적 지형과 동적 도시를 두 Canvas layer로 분리했다. 도로·utility 연결 모델은 React render 단위로 cache하고, 1.5초 draw rate에 따라 high/balanced/low 품질을 자동 선택한다. rAF loop는 최신 draw callback을 ref로 읽어 pointer hover마다 취소·재등록하지 않는다. 평상시에는 30fps budget을 유지하지만 최근 pointer 입력 140ms 동안만 16ms interactive budget으로 전환하고, 같은 타일의 동일 drag path는 React state를 다시 만들지 않는다. paused/reduced-motion에서도 변경된 preview만 dirty frame 한 번으로 갱신한다. slow mobile은 low tier에 고정해 36ms background frame budget, 고양이 3마리, 카트 1대, utility pulse·동적 강물결 0개로 조절한다. 도로에는 인구 기반 고양이 보행자와 화물 카트를 추가하고 연결된 전선·관에는 faint trace와 흐름 pulse를 추가했다. `?perf=1`에서 FPS·quality·DPR HUD를 노출한다.
+
+사용자 피드백으로 노동 모델을 별도 감사했다. 숙소 수가 인구와 무관하게 노동 +2를 만들던 모델을 제거하고 총 노동을 실제 population으로 계산한다. `laborUsed`와 가용 노동을 분리해 HUD는 `가용/총원`, inspector는 `배정/필요`를 표시한다. 자동화 취수장 0명·정수장 1명을 먼저 배정하고, 원료·utility가 부족한 시설은 노동을 점유하지 않는다. 같은 종류 시설은 교대마다 round-robin으로 배정하며 회관 upgrade는 현재 가용 노동을 검사하고 승인 시 표시된 전력·물·노동·코인을 모두 현재 교대 예산에서 차감한다. 온라인 숙소 하나가 미연결 숙소의 물리적 capacity까지 활성화해 유령 이주·노동을 만들던 경로도 차단했다. 구 저장은 `laborUsed=0`으로 이전하고 current-format 저장은 현재 교대 사용량을 총 노동 범위로 검증해 보존한다.
+
+상단 자원 HUD는 `MAX CAT`으로 의미를 명확히 하고 PWR·H₂O도 LAB처럼 `가용/총용량`으로 표시한다. hover title에는 파생 사용량을 함께 제공한다(예: PWR `18/24`, `사용 6`). paused save에서도 총용량이 사라지지 않도록 검증된 rates를 round-trip하고 비정상 값은 제한한다. 전선과 전선 preview는 수도관의 청색과 즉시 구분되는 노란색 `#f2c94c` 계열로 통일했다. 생활 애니메이션은 보행 고양이의 상하 보폭·꼬리 흔들림과 운송차의 차체 진동·바퀴 회전을 추가했다. 전선은 노란 전류, 수도관은 파란 유량 marker가 연결 방향으로 흐르며, low tier에서도 network당 pulse 1개를 남겨 모바일에서 애니메이션이 완전히 사라지지 않게 했다.
+
+검증:
+
+- `npm test`: 47/47 통과
+- `npm run typecheck`: 통과
+- `npm run build`: 통과
+- stage-4 desktop/mobile 기능 QA와 콘솔 오류 0건
+- DPR 3 기기에서 desktop Canvas DPR 2, 390px mobile Canvas DPR 1.5
+- unpaused CPU 4×·390×844·stage-4: 27.4fps, main-thread 56.0%, adaptive `low`, utility pulse 1/network
+- desktop interaction QA: background 31.0fps → pointer 이동 63.7fps, active p95 21.8ms, paused drag event-to-frame p95 17.5ms, 7/7 preview frame 갱신
+- production HUD fixture: PWR `18/24` (`사용 6`), H₂O `7/12` (`사용 5`), `MAX CAT 4`, power token `#f2c94c`
+- 모바일 horizontal overflow 0, 보이는 버튼 최소 44px
