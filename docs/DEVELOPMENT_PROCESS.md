@@ -337,3 +337,49 @@ git ls-remote --heads origin feat/nekopolis-foundry
 - 선택 상태에서는 배경 격자가 꺼지고 로컬 2×2 footprint만 유지
 - 데스크톱 수평 overflow 0, 콘솔 오류 0건
 - 시각 증거: `qa-art/terrain-grid-idle-fixed.png`, `qa-art/terrain-grid-hover-fixed.png`, `qa-art/terrain-grid-selected-fixed.png` (Git 비추적)
+
+## 15. 도로·시설 UI·애니메이션 폴리시와 순환 콘텐츠
+
+후속 요청에서 도로 이음새, 작은 시설 실루엣, 평면적인 건설/시설 UI와 부족한 후반 콘텐츠를 함께 개선했다. 기능 수를 무작정 늘리지 않고 기존 캣닢→사료, 목재→가구 체인의 surplus와 부산물이 다시 도시 생활로 돌아오도록 범위를 제한했다.
+
+시각·UI:
+
+- 도로를 링크별 capsule 대신 전체망 underlay→body→center highlight→junction 순서로 합성해 코너·T자·교차 이음새 제거
+- 원형 받침을 footprint와 같은 isometric diamond deck으로 교체하고 건물 실루엣 확대
+- 시뮬레이션 tick과 분리된 30fps Canvas 루프 추가
+- 발전소 연기, 정수장 수면, 사료 호퍼, 공방 크레인, 숙소 창문, 회관 깃발, 찻집 증기, 재활용 컨베이어 애니메이션
+- inspector에 상태/처리량/연결/입출력 계층과 flow meter 추가
+- build dock 대비·선택 상태·카드 밀도 개선, 모바일 배송 카드를 44px action이 있는 compact strip으로 축소
+
+콘텐츠:
+
+- 신규 자원 `SCRAP`: 사료 공장과 가구 공방이 각 1 생산
+- 재활용 공방: 부산물 3 + 전력 3 + 노동 2 → 목재 2 + 4코인
+- 캣닢 찻집: 캣닢 2 + 전력 1 + 정수 1 + 노동 1 → 행복 +6 + 3코인
+- 황혼 배송: 사료 3 + 가구 1 → 90코인, 12 tick cooldown과 누적 배송 횟수
+- 계약 4에서 신규 두 시설과 배송을 해금하고 이전 localStorage는 신규 상태 기본값으로 마이그레이션
+
+Grok 아트:
+
+- 사용자 승인에 따라 `xai-oauth/grok-4.5`를 지속 route 변경 없이 격리된 1회성 아트 작업자로 사용
+- 화면 진단과 오리지널 찻집·재활용 공방·배송 비콘 SVG를 생성
+- `public/art/grok-content-reference.svg`는 `<script>`·외부 이미지 없이 XML/Chromium 검증 후 전체 배경 rect를 제거해 투명 reference sheet로 보존
+- 런타임 Canvas는 SVG의 주전자형 찻집, 이중 컨베이어 재활용 공방, ring beacon 실루엣을 절차적으로 재해석
+
+검증:
+
+- `npm test`: 34/34 통과
+- `npm run typecheck`: 통과
+- `npm run build`: 통과
+- 450ms 간 Canvas frame SHA 상이: 시뮬레이션 tick 전에도 애니메이션 갱신
+- 실제 stage-4 fixture에서 찻집·재활용 공방 전력/정수/도로/노동 진단 online
+- 한 교대 SCRAP `+2 생성 -3 소비 = -1`, 찻집 행복 +6, 두 시설 수익 누적
+- 배송 `929→1019₩`, 사료 `19→16`, 가구 `4→3`, 배송 1회, 즉시 재배송 11 tick 남음
+- 데스크톱/390×844 가로 overflow 0, 모바일 보이는 버튼 최소 44px, 브라우저 콘솔 오류 0건
+- 시각 증거: `qa-art/polish-stage4-desktop.png`, `qa-art/polish-teahouse-inspector.png`, `qa-art/polish-stage4-mobile.png` (Git 비추적)
+
+독립 exact-snapshot reviewer는 첫 검토에서 취수·정수 노동이 생산 시설 뒤에 배정되면서, 정수장 진단은 offline인데 clean-water capacity가 먼저 생기는 문제를 발견해 `REQUEST_CHANGES`를 반환했다. 자동화 취수장은 공유 노동 0, 정수장은 노동 1을 소비 시설보다 먼저 배정하고, 실제 online 정수장만 정수를 생산하도록 수정했다. 노동 부족 정수장과 하류 밭이 모두 offline이며 물·캣닢이 증가하지 않는 회귀 테스트를 추가했다.
+
+후속 reviewer는 reduced-motion Canvas 시간이 `s.tick`에 연결되어 simulation tick마다 정지 화면이 바뀌는 문서-구현 불일치를 발견했다. reduced-motion의 animation time을 상수 0으로 분리해 실제 시간과 simulation tick 모두에서 미세 애니메이션이 완전히 고정되도록 수정했고, 1초 simulation tick을 넘기는 브라우저 frame hash 검증을 추가로 수행했다.
+
+다음 reviewer는 Canvas와 transition이 정지해도 배송 beacon의 CSS keyframe animation이 남는 접근성 누락을 발견했다. reduced-motion media query에서 CSS animation과 transition을 모두 전역 비활성화하고, 실제 브라우저 computed style에서 배송 beacon의 `animation-name: none`을 검증하도록 gate를 강화했다.
