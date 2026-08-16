@@ -1,4 +1,4 @@
-import{W,H}from'./simulation';
+import{W,H,RIVER_PATH}from'./simulation';
 
 export type TerrainGeometry={tw:number;th:number};
 export type ScreenProjector=(x:number,y:number)=>readonly[number,number];
@@ -18,8 +18,7 @@ const ellipse=(ctx:CanvasRenderingContext2D,x:number,y:number,rx:number,ry:numbe
  ctx.fillStyle=fill;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();
 };
 
-const riverWorld:readonly[number,number][]=[[25.8,-1.4],[23.5,-.2],[21.5,1.2],[20,3.2],[19.7,5.8],[20.4,8.8],[21,12],[21.6,15.2],[22.5,19.4]];
-const riverPoints=(screen:ScreenProjector)=>riverWorld.map(([x,y])=>screen(x,y));
+const riverPoints=(screen:ScreenProjector)=>RIVER_PATH.map(([x,y])=>screen(x,y));
 const clipToLand=(ctx:CanvasRenderingContext2D,screen:ScreenProjector)=>{
  const{minX,maxX,minY,maxY}=terrainGridBounds(W,H),top=screen(minX,minY),right=screen(maxX,minY),bottom=screen(maxX,maxY),left=screen(minX,maxY);
  ctx.beginPath();ctx.moveTo(top[0],top[1]);ctx.lineTo(right[0],right[1]);ctx.lineTo(bottom[0],bottom[1]);ctx.lineTo(left[0],left[1]);ctx.closePath();ctx.clip();

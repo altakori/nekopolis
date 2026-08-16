@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {canvasDpr,facilityWarningBadges,nextRenderQuality,renderBudget,targetFrameMs} from './rendering';
+import {canvasDpr,facilityWarningBadges,nextRenderQuality,renderBudget,roadFacingDoor,routeWithDwell,targetFrameMs} from './rendering';
 
 describe('render budget',()=>{
  it('caps high-density mobile canvases at DPR 1.5',()=>{
@@ -36,5 +36,15 @@ describe('render budget',()=>{
    {kind:'road',symbol:'🛣!',color:'#756554'},
    {kind:'input',symbol:'📦!',color:'#8f596c'},
   ]);
+ });
+ it('places a facility door on the boundary between its road and edge cell',()=>{
+  expect(roadFacingDoor(25,26,24)).toEqual({x:1.5,y:1});
+  expect(roadFacingDoor(49,25,24)).toEqual({x:1,y:1.5});
+ });
+ it('holds at both doors and moves continuously in both directions',()=>{
+  expect(routeWithDwell(.1,.2)).toEqual({progress:0,moving:false});
+  expect(routeWithDwell(.7,.2).progress).toBeCloseTo(.5);
+  expect(routeWithDwell(1.3,.2)).toEqual({progress:1,moving:false});
+  const returning=routeWithDwell(1.9,.2);expect(returning.moving).toBe(true);expect(returning.progress).toBeCloseTo(.5);
  });
 });

@@ -4,7 +4,7 @@
 
 ## 게임 루프
 
-1. 바이오 발전소에서 전력을 생산하고, 직선 전선이 시설 endpoint에 닿거나 시설 타일 아래를 지나가도록 연결합니다.
+1. 바이오 발전소에서 전력을 생산하고, 직선 전선이 시설 endpoint·시설 footprint·다른 전선의 중간 junction에 닿도록 연결합니다.
 2. 강변 취수장→정수장→직선 수도관 순서로 깨끗한 물을 공급합니다.
 3. 서쪽 바깥 도시 관문에서 도로를 연결하고 고양이 노동력을 배치해 캣닢과 목재를 생산합니다.
 4. 사료 공장과 가구 공방에서 원료를 가공하고 부산물을 만듭니다.
@@ -15,33 +15,37 @@
 
 ## 주요 기능
 
-- 20×14 Canvas 2.5D 아이소메트릭 도시와 강·초원·식생 지형
+- 24×18 Canvas 2.5D 아이소메트릭 도시와 강·초원·식생·절벽 지형
 - 마우스/터치 드래그 도로 시공과 타일을 관통하는 직선 전선·수도관 segment 시공
-- 2×2 다중 타일 시설, 상시 기초판, 4칸 hover·선택 강조
-- 시뮬레이션 tick과 분리된 30fps 시각 루프, 실제 고양이 보행자·화물 카트·utility pulse와 시설별 애니메이션
+- 2×2 다중 타일 시설, 건설·선택 중에만 보이는 footprint guide, 4칸 hover·선택 강조
+- 지붕·좌우 벽면·창문·문·굴뚝·탱크를 갖춘 기능별 volumetric 건물과 top/side 두께를 갖춘 도로
+- 강 위 road cell을 난간·교각·plank가 있는 raised bridge로 자동 표현
+- 도로를 향한 실제 출입구까지 이어지는 입체 진입로와 door→도로 BFS→door 경로를 왕복하며 양 끝에서 하역하는 고양이 화물차
+- 시설 간 연결 경로를 따라 이동하고 출입구에서 대기하는 고양이 주민, 이동 중 보행 동작과 역할별 외형
+- 시뮬레이션 tick과 분리된 약 30fps 시각 루프, online 상태에 연동된 시설 기계·연기·물 흐름·창문 애니메이션
 - 정적 지형/동적 개체 2-layer Canvas, 모바일 DPR 1.5·데스크톱 DPR 2 상한, 실제 FPS 기반 high/balanced/low 자동 품질 조절
-- underlay→body→highlight→junction 순서로 합성되는 이음새 없는 도로망과 격자 방향 isometric 건물 deck
+- shadow side→side wall→top surface→highlight 순서로 합성되는 raised 도로망과 동일 isometric 축의 건물
 - 엄격한 인프라 의미: 도로는 전력·수도를 전달하지 않고 시설도 숨은 전도체가 되지 않음
 - 발전 용량, 취수·정수 처리량, 도로 접근, 노동력, 입력 재고를 순서대로 계산하는 생산 시뮬레이션
 - 캣닢→사료, 목재→가구 생산과 실제 원료 소비
 - 사료·가구 생산 부산물→재활용 공방→목재 순환, 캣닢 찻집의 행복·코인 생산
 - 사료 3 + 가구 1을 90코인으로 교환하는 반복 황혼 배송과 12 tick cooldown
 - 회관 레벨로 결정되는 최대 고양이와 전력·정수·외부도로가 연결된 숙소의 교대별 이주
-- 인구 기반 총 노동력, 인프라 우선 배정, 정책별 생산 배정, 동일 시설 round-robin과 `가용/총원` HUD
+- 인구 기반 총 노동력, 인프라 우선 배정, 정책별 생산 배정, 동일 시설 round-robin과 `가용고양이/마을고양이` HUD
 - 회관 LV.1–3 업그레이드 및 코인·전력·정수·노동·외부도로 요구조건
 - 숙소 LV.1–3 증축, 최대 고양이 +2/+4/+7, 지도에서 보이는 층수 변화
 - 24×18 확장 지구와 기존 20×14 저장의 cell anchor·utility endpoint 좌표 migration
 - 털색·무늬·체형·속도와 역할 소품이 다른 고양이 주민 5종
 - 시설별 전력·정수·도로·노동·원료 병목, 입출력, 실제 처리량 진단
 - 2×2 시설의 어느 면에 endpoint가 닿거나 선분이 footprint 타일 아래를 지나도 인정되는 연결 판정
-- 같은 종류 선분끼리는 shared endpoint에서만 이어지므로 단순 기하 교차는 접속되지 않으며, 전선과 수도관 전도망도 완전히 분리
+- 같은 종류 선분끼리는 shared endpoint뿐 아니라 중간 grid cell의 겹침·교차에서도 junction으로 접속되며, 전선과 수도관 layer는 서로 완전히 분리
 - 전력·물·노동·도로·원료 부족을 `⚡!`·`💧!`·`🐈!`·`🛣!`·`📦!` 세로 배지로 동시에 표시
-- 평상시 faint trace와 흐름 pulse로 가동 상태를 보여주고 발전소·정수장 선택 시 glow하는 전력·정수 overlay
+- 평상시 faint trace와 network 전체 예산 안의 흐름 pulse로 가동 상태를 보여주고 전력·정수를 쓰는 모든 시설 선택 시 관련 망과 service terminal이 glow하는 dependency overlay
 - 도로·전선·수도관은 드래그 기하 거리 × 단가를 계산한 뒤 코인 단위로 버림
 - 실제 강변에만 배치 가능한 취수장과 원수관/정수관 분리 진단
 - 4단계 계약·영구 해금·3교대 자립 유지 목표
 - 시민 수에 따른 사료 소비와 균형·식량·재료 노동 우선순위
-- 지도 중심 command bar, 임무 overlay, 하단 건설 dock, 선택 시설 context inspector
+- 지도 중심 command bar, 모바일에서 접고 펼칠 수 있는 임무 overlay, 하단 건설 dock, 선택 시설 context inspector
 - localStorage 자동 저장·불러오기와 이전 저장 형식 마이그레이션
 - 데스크톱/모바일 반응형 UI
 - Grok 제작 오리지널 SVG 타이틀 장식, 고양이 기술자 마스코트, 찻집·재활용 공방·배송 비콘 reference sheet
@@ -98,7 +102,7 @@ npm run typecheck
 npm run build
 ```
 
-현재 자동 테스트는 기존 건설·생산·utility·progression·저장·배송 계약에 더해 선분-시설 타일 관통 연결, 기하 교차 비접속, 다중 경고 적층, 숙소 증축 비용·수용량, 20×14→24×18 저장 좌표 migration, DPR 상한, adaptive render quality와 frame budget, 인구 기반 노동력, 노동 사용/가용 분리, 빈·미연결 숙소의 가짜 이주·노동 차단, 원료 부족 시설의 노동 미점유, 동일 시설 round-robin, 회관의 가용 노동 검사, current-shift 노동 사용량의 안전한 저장 migration 등 53개 상호작용을 검증합니다.
+현재 자동 테스트는 기존 건설·생산·utility·progression·저장·배송 계약에 더해 선분-시설 타일 관통 연결, 기하 교차 비접속, 다중 경고 적층, 숙소 증축 비용·수용량, 20×14→24×18 저장 좌표 migration, DPR 상한, adaptive render quality와 frame budget, 인구 기반 노동력, 노동 사용/가용 분리, 빈·미연결 숙소의 가짜 이주·노동 차단, 원료 부족 시설의 노동 미점유, 동일 시설 round-robin, 회관의 가용 노동 검사, current-shift 노동 사용량의 안전한 저장 migration, road-facing door midpoint와 양방향 이동·대기 continuity 등 57개 상호작용을 검증합니다.
 
 ## 배포
 

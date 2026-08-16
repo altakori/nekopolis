@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {W,EXTERNAL_ROAD,HALL_UPGRADES,DORM_UPGRADES,initialState,build,buildLinear,buildIssue,bulldoze,step,dragLine,lineBuildCost,utilityConnected,footprintCells,footprintCenter,idx,migrateState,hallUpgradeIssue,upgradeHall,dormUpgradeIssue,upgradeDorm,courierIssue,fulfillCourier,availableLabor,type State,type BuildingKind} from './simulation';
+import {W,EXTERNAL_ROAD,HALL_UPGRADES,DORM_UPGRADES,initialState,build,buildLinear,buildIssue,bulldoze,step,dragLine,lineBuildCost,utilityConnected,isRiverCell,footprintCells,footprintCenter,idx,migrateState,hallUpgradeIssue,upgradeHall,dormUpgradeIssue,upgradeDorm,courierIssue,fulfillCourier,availableLabor,type State,type BuildingKind} from './simulation';
 import {terrainGridBounds} from './terrain';
 
 const empty=()=>{const s=initialState();s.grid.fill(null);return s};
@@ -23,10 +23,12 @@ describe('construction and geometry',()=>{
 
 describe('network semantics',()=>{
  it('roads never conduct electricity',()=>{const s=empty();put(s,'plant',0,0);put(s,'road',1,0);link(s,'wire',2,0,3,0);expect(utilityConnected(s.grid,s.utilities.wire,['plant']).size).toBe(0)});
- it('shared segment endpoints conduct but geometric crossings do not',()=>{const s=empty();put(s,'plant',0,1);link(s,'wire',0,2,4,2);link(s,'wire',4,2,4,3);link(s,'wire',2,0,2,4);const factory=put(s,'feed',4,4),crossed=put(s,'workshop',2,3),served=utilityConnected(s.grid,s.utilities.wire,['plant']);expect(served.has(factory)).toBe(true);expect(served.has(crossed)).toBe(false)});
+ it('conducts power through shared endpoints and middle wire crossings',()=>{const s=empty();put(s,'plant',0,1);link(s,'wire',0,2,4,2);link(s,'wire',4,2,4,3);link(s,'wire',2,0,2,4);const factory=put(s,'feed',4,4),crossed=put(s,'workshop',2,3),served=utilityConnected(s.grid,s.utilities.wire,['plant'],true);expect(served.has(factory)).toBe(true);expect(served.has(crossed)).toBe(true)});
+ it('conducts water through middle pipe crossings',()=>{const s=empty();put(s,'intake',0,1);link(s,'pipe',0,2,4,2);link(s,'pipe',2,0,2,4);const purifier=put(s,'purifier',2,4);expect(utilityConnected(s.grid,s.utilities.pipe,['intake'],true).has(purifier)).toBe(true)});
  it('connects source and facility tiles underneath an active utility segment',()=>{const s=empty(),plant=put(s,'plant',2,2),factory=put(s,'feed',5,2);link(s,'wire',0,2,7,2);const served=utilityConnected(s.grid,s.utilities.wire,['plant']);expect(served.has(plant)).toBe(true);expect(served.has(factory)).toBe(true)});
  it('does not connect a facility merely beside the middle of a utility segment',()=>{const s=empty();put(s,'plant',0,2);const beside=put(s,'feed',4,3);link(s,'wire',0,2,7,2);expect(utilityConnected(s.grid,s.utilities.wire,['plant']).has(beside)).toBe(false)});
- it('pipe and wire crossings stay electrically independent',()=>{const s=empty();put(s,'plant',0,0);put(s,'intake',2,3);link(s,'wire',0,0,4,2);link(s,'pipe',2,3,2,0);const live=utilityConnected(s.grid,s.utilities.wire,['plant']),wet=utilityConnected(s.grid,s.utilities.pipe,['intake']);expect(live.has(idx(2,3))).toBe(false);expect(wet.has(idx(4,2))).toBe(false)});
+ it('pipe and wire crossings stay electrically independent',()=>{const s=empty();put(s,'plant',0,0);put(s,'intake',2,3);link(s,'wire',0,0,4,2);link(s,'pipe',2,3,2,0);const live=utilityConnected(s.grid,s.utilities.wire,['plant'],true),wet=utilityConnected(s.grid,s.utilities.pipe,['intake']);expect(live.has(idx(2,3))).toBe(false);expect(wet.has(idx(4,2))).toBe(false)});
+ it('classifies road cells over the shared river path as bridge sites',()=>{expect(isRiverCell(idx(20,6))).toBe(true);expect(isRiverCell(idx(4,6))).toBe(false)});
  it('reports a purifier raw-water break instead of a generic healthy state',()=>{let s=utilities();s.utilities.pipe=[];s=runCycle(s);expect(s.diagnostics[idx(4,2)].bottleneck).toBe('원수관 미연결');expect(s.rates.water).toBe(0)});
 });
 

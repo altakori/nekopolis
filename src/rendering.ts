@@ -23,3 +23,16 @@ export function renderBudget(quality:RenderQuality,population:number){
  const budget=caps[quality];
  return{...budget,cats:Math.min(Math.max(0,Math.floor(population)),budget.cats)};
 }
+
+export function roadFacingDoor(road:number,edgeCell:number,width:number){
+ const roadX=road%width,roadY=Math.floor(road/width),cellX=edgeCell%width,cellY=Math.floor(edgeCell/width);
+ return{x:(roadX+cellX)/2,y:(roadY+cellY)/2};
+}
+
+export function routeWithDwell(raw:number,dwell:number){
+ const cycle=2+dwell*2,phase=((raw%cycle)+cycle)%cycle;
+ if(phase<dwell)return{progress:0,moving:false};
+ if(phase<dwell+1)return{progress:phase-dwell,moving:true};
+ if(phase<dwell*2+1)return{progress:1,moving:false};
+ return{progress:1-(phase-dwell*2-1),moving:true};
+}

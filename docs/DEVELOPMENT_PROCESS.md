@@ -406,7 +406,7 @@ Grok 아트:
 
 ## 2026-08-16 · 관통 utility 연결과 다중 시설 경고
 
-전선·수도관 선분이 시설 footprint 타일 아래를 지나면 endpoint가 아니어도 해당 시설에 연결된다. source 시설도 선분 관통으로 망을 활성화할 수 있다. 다만 선분끼리는 계속 shared endpoint에서만 전도하므로 단순 기하 교차가 junction을 만들지 않으며 전선·수도관 layer도 독립이다. 기존 endpoint 인접 연결은 호환성을 위해 유지한다.
+전선·수도관 선분이 시설 footprint 타일 아래를 지나면 endpoint가 아니어도 해당 시설에 연결된다. source 시설도 선분 관통으로 망을 활성화할 수 있다. 같은 종류 선분끼리는 shared endpoint뿐 아니라 중간 grid cell의 겹침·교차도 junction으로 전도한다. 전선과 수도관 layer는 계속 독립이며 기존 endpoint 인접 연결도 유지한다.
 
 단일 `!` 표식은 첫 bottleneck만 보여 여러 원인을 숨겼다. simulation diagnostics가 `power`, `water`, `labor`, `road`, `input`을 독립적으로 모두 기록하고 Canvas는 `⚡!`, `💧!`, `🐈!`, `🛣!`, `📦!` 색상 배지를 시설 옆에 수직 적층한다. 지도 상단에서는 stack 방향을 아래로 바꿔 clipping을 피한다.
 
@@ -437,3 +437,40 @@ Grok 아트:
 - CPU 4×·390×844: 27.4fps, main-thread 60.5%, adaptive `low`, DPR 1.5, horizontal overflow 0
 - desktop interaction: 61.8fps, active p95 18.1ms, paused drag p95 17.8ms, 7/7 preview frame 갱신
 - desktop/mobile final screenshot: 중간 명도 세이지, 밝은 기초판, 확대 시설, 경고 배지 가독성, release-blocking clipping 없음
+
+## 2026-08-16 · Volumetric cat-city art pass
+
+사용자 피드백에서 큰 마름모 기초판 위의 수평 facade가 지형의 isometric 축과 어긋나고 건물이 평면 아이콘처럼 보이는 문제가 확인됐다. 상시 기초판을 제거하고 선택·건설 시에만 footprint guide를 표시한다. 모든 주요 시설은 동일 광원의 top/left/right 면, 지붕, 창문, 출입구, 탱크, 굴뚝을 갖춘 prism 조합으로 재구성했다. 2×2 시설은 footprint를 실제로 점유하도록 폭을 확대했다.
+
+도로는 shadow side→side wall→top surface→highlight 네 층으로 높이를 만들었다. 강 위 road cell은 raised deck, plank, 난간, 교각이 있는 다리로 자동 렌더링한다. 도로 연결 시설에는 입체 진입로를 만들고, 생산 관계 시설 간 BFS 도로 경로를 고양이 화물차가 왕복해 건물 입구까지 진입한다. 화물차도 body/cab/wheel이 분리된 prism 형태다.
+
+Claude Code bounded graphics pass로 고양이 도시의 창의성을 보강했다. 고양이 귀·발바닥·수염·물고기·꼬리 motif를 floating emoji가 아닌 roof, facade, rail, tank, pipe 구조에 통합했다. 발전소·취수/정수·사료·가구·재활용·찻집·숙소·회관·광장이 각기 다른 고양이 문화와 기능을 드러내도록 유지했다.
+
+검증 결과:
+
+- `npm test`: 55/55 통과
+- `npm run typecheck`, `npm run build`, `git diff --check`: 통과
+- bridge fixture: 실제 강 횡단, raised deck·난간·교각·plank, overflow 0, console 오류 0
+- utility fixture: 전선·수도관 중간 junction 전도, 전선/수도관 layer 분리, 5종 warning stack 통과
+- dorm browser flow: LV.1→2와 4칸 footprint·비용·용량 회귀 통과
+- desktop interaction: 61.4fps, active p95 17.9ms, paused drag p95 17.8ms, 7/7 preview 갱신
+- CPU 4×·390×844: 27.3fps, main-thread 70.5%, adaptive `low`, DPR 1.5, horizontal overflow 0
+- desktop/mobile screenshot: cat motif, volumetric face, warm build dock, HUD `가용고양이/마을고양이`, release-blocking clipping 없음
+
+## 2026-08-16 · Living-city interaction과 연결성 pass
+
+세 개의 독립 read-only 리뷰를 SimCity interaction, animation/performance, isometric connectivity 관점에서 병렬 수행했다. 공통 권고에 따라 새 actor나 particle 수를 늘리지 않고 기존 render budget 안에서 원인→행동→결과 연결을 강화했다. 시설은 raw grid index 대신 projected depth로 정렬한다. 도로와 맞닿은 footprint edge에서 실제 door midpoint를 계산하고, 진입로·화물차·주민 경로가 footprint 중심이 아니라 해당 출입구를 사용한다. 화물차는 door→도로 BFS→door를 왕복하며 양 끝에서 하역하고, 주민은 연결 시설 사이를 이동한 뒤 출입구에서 대기한다.
+
+시설 animation 시간은 diagnostics의 `online` 상태에 연결했다. offline 시설은 silhouette과 경고를 유지하지만 연기·물 흐름·conveyor·steam·창문 activity를 멈추고 dim 처리한다. 선택한 시설이 전력·정수 소비자여도 관련 network를 자동 강조하며, 건물 벽면에는 연결 상태를 보여주는 service riser/terminal을 그린다. utility pulse는 segment마다 복제하지 않고 network 전체 high/balanced/low `3/2/1`개로 제한한다. 모바일 mission card는 기본 compact이며 44px `임무 보기/접기` control로 확장할 수 있다. reduced-motion media query 변경을 runtime에 구독해 continuous frame scheduling도 즉시 멈춘다.
+
+검증 결과:
+
+- `npm test`: 57/57 통과
+- `npm run typecheck`, `npm run build`, `git diff --check`: 통과
+- bridge, warning/network, dorm upgrade, interaction, polish browser regression fixture: 모두 통과, console 오류 0
+- living-city fixture: 390×844 compact 기본, toggle 44px, `aria-expanded` 전환, compact/expanded overflow 0
+- 선택 전력망 Canvas 계측: power stroke 1→2, 강조 stroke 2, 선택 전후 frame hash 변화
+- reduced-motion runtime 전환: idle frame 0, pointer input 후 dirty frame 정확히 1
+- desktop interaction: background 30.4fps, pointer 58.3fps, active p95 29.3ms, paused drag p95 17.7ms
+- CPU 4×·390×844 반복 측정은 headless host 부하에 따라 16.7–27.4fps로 변동했으며, clean repeat에서 기존 27.4fps baseline을 재현; adaptive `low`, DPR 1.5, overflow 0
+- desktop/mobile/selected-network screenshot 직접 검사: mission occlusion 개선, service terminal과 warning badge 비중첩, door apron cart 배치, release-blocking clipping 없음
