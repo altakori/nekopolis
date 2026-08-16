@@ -1,14 +1,22 @@
 # Nekopolis Foundry — 후속 수정 상태
 
-업데이트: 2026-08-16
+업데이트: 2026-08-17
 
 ## 저장소
 
 - Repository: `https://github.com/altakori/nekopolis-foundry`
-- Branch: `feat/guided-first-contract`
-- Base HEAD: `56a45d6f457bf67d3eb7ecc52fad71c9de7398fe`
+- Branch: `feat/industrial-story-housing-v2`
+- Base HEAD: `82520a769d328666937da84d5305bd431e5562a1`
 - `main` 미병합
-- 첫 계약 가이드 수정은 exact-snapshot review 승인 후 `f629122`로 topic branch에 commit·push했으며 `main`에는 미병합 상태
+- 첫 계약 가이드의 승인 이력을 보존한 후 이야기·위생 생산망·주거 리디자인·별도 3D 비교본을 같은 topic branch 계보에서 확장
+
+## 현재 확장
+
+- 네 계약을 폭우 뒤 강변 복구 이야기의 네 장으로 연결하고, 장 진행 track·감독 대사·구체적인 `NEXT` 행동·게임 방법 overlay를 추가했다.
+- 산지 전용 모래 원석 채석장과 공정수 기반 고양이 모래 공장을 추가했다. 시민은 위생 모래를 소비하며 부족 시 행복도가 하락한다.
+- 숙소 LV.1/2/3을 각각 단독 주택·발코니 빌라·고층 아파트로 다시 그렸다.
+- `v2.html`은 Three.js 기반 격리된 비교 프로토타입이며 `npm run dev:v2`로 5174 포트에서 실행한다.
+- 67/67 tests, typecheck, 2D+v2 production build, desktop/mobile/WebGL 브라우저 QA를 통과했다.
 
 ## 사용자 교정
 

@@ -507,3 +507,21 @@ Claude Code bounded graphics pass로 고양이 도시의 창의성을 보강했�
 - `git diff --check`: 통과
 - 데스크톱·모바일에서 전선, 정수장 배치, 정수장 전력, 원수관의 4개 안내 단계를 검증했다. 각 단계의 안내 도구는 정확히 1개만 강조됐고 horizontal overflow와 console/HTTP 오류는 0이었다.
 - reduced-motion에서는 애니메이션 없이 정적 beacon·경로·추천 footprint가 유지됐다.
+
+## 2026-08-17 · 이야기·위생 생산망·주거 리디자인과 3D 비교본
+
+첫 계약 안내 이후에도 플레이어가 왜 시설을 짓는지 이해하도록 네 계약을 폭우 뒤 강변 복구 이야기의 네 장으로 재구성했다. 임무 카드에는 장 진행 track, 현장 감독 먀오의 짧은 이야기, 완료 개수, 현재 행동 하나만 표시하는 `NEXT`를 넣고 별도 게임 방법 overlay를 추가했다. 전체 체크리스트만 먼저 보여 주는 방식은 대시보드처럼 느껴져 폐기했다.
+
+정착 단계에는 북쪽 산기슭에서만 배치할 수 있는 모래 원석 채석장과, 전력·정수·도로·노동을 사용해 원석을 세척·건조하고 위생 모래와 부산물을 만드는 고양이 모래 공장을 추가했다. 시민은 사료와 별개로 위생 모래를 소비하며 부족 시 행복도가 떨어진다. 광맥 위치를 임의 자원 boolean으로 저장하는 대신 지도 좌표와 실제 2×2 footprint·도로·utility 판정에서 생산 상태를 파생한다.
+
+건물 아트는 현대 수처리 시설의 낮은 녹색 매스·필터 루버·식재 지붕과 현대 산업 건물의 톱니형 채광 지붕·사일로를 참고해 아이소메트릭 형태를 세분화했다. 숙소는 단순 높이 변화 대신 LV.1 단독 주택(경사지붕·현관), LV.2 빌라(3층·발코니·옥상정원), LV.3 아파트(고층·반복 발코니·옥상 태양광)로 완전히 다른 실루엣을 사용한다.
+
+본편 교체 위험을 피하기 위해 Three.js 비교본은 `v2.html`과 `src/v2.ts`에 격리했다. `npm run dev:v2`가 5174 포트에서 WebGL 장면을 띄우며 산지 채석→세척·건조→생활 위생 흐름과 주택·빌라·아파트 버튼 전환을 제공한다. 폐기한 중간 prototype은 현재 파일에 남기지 않는다.
+
+검증 결과:
+
+- `npm test -- --run`: 67/67 통과
+- `npm run typecheck`: 통과
+- `npm run build`: 2D와 v2 multi-page production build 통과
+- Playwright installed Chrome QA: desktop 2D initial/story/help, stage 3 sanitation/housing, 390×844 mobile, desktop WebGL v2 통과
+- 2D desktop/mobile horizontal overflow 0, `게임 방법` 모바일 접근 가능, v2 WebGL context 확인, console/page/HTTP 오류 0
