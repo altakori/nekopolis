@@ -30,4 +30,4 @@
 4. 자립 지구: 인구 10, 행복 72, 사료와 위생 모래 비축을 3교대 유지한다.
 
 ## 기술·배포
-Vite + TypeScript + Canvas 2D. 정적 빌드이며 GitHub Pages 또는 임의 정적 호스트에 배포 가능. 마우스와 터치 지원, localStorage 저장.
+Vite + TypeScript 기반으로 Canvas 2D 본편과 동일한 `simulation.ts`를 사용하는 Three.js 3D playable surface를 함께 제공한다. 둘은 같은 건설·utility·생산·진행 규칙을 사용하고 localStorage 슬롯은 분리된다. 정적 multi-page build이므로 GitHub Pages 또는 임의 정적 호스트에 배포 가능하며 마우스와 터치를 지원한다.

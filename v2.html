@@ -1,1 +1,17 @@
-<!doctype html><html lang="ko"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><meta name="theme-color" content="#0b2428"/><title>냥토피아 공업구역 v2 · 3D 스케치</title></head><body><div id="v2-root"><canvas id="scene" aria-label="냥토피아 3D 도시 비교 장면"></canvas><header><div><small>NEKOPOLIS FOUNDRY · V2 STUDY</small><h1>산에서 보금자리까지</h1><p>2D 본편의 위생 생산망과 주거 단계를 실제 3D 매스로 검토하는 경량 비교 프로토타입입니다.</p></div><a href="./">2D 본편으로 돌아가기</a></header><aside class="story"><small>CHAPTER 03 · 깨끗한 보금자리</small><blockquote>“먹을 것과 깨끗한 화장실이 있어야 진짜 마을이에요.”</blockquote><div class="chain"><button data-focus="quarry"><i>01</i><b>산지 채석</b><span>흡수성 원석</span></button><button data-focus="litter"><i>02</i><b>세척·건조</b><span>공정수 회수</span></button><button data-focus="home"><i>03</i><b>생활 위생</b><span>행복도 보호</span></button></div></aside><nav class="housing" aria-label="숙소 단계 비교"><small>HOUSING EVOLUTION</small><button data-home="1" class="active">LV.1 주택</button><button data-home="2">LV.2 빌라</button><button data-home="3">LV.3 아파트</button></nav><div class="hint">드래그: 회전 · 휠: 확대 · 건물을 눌러 시점 이동</div></div><script type="module" src="/src/v2.ts"></script></body></html>
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+  <meta name="theme-color" content="#0b2428"/>
+  <meta name="description" content="2D와 동일한 시뮬레이션으로 플레이하는 냥토피아 공업구역 3D 버전"/>
+  <title>냥토피아 공업구역 v2 · 플레이 가능한 3D</title>
+</head>
+<body>
+  <main id="v2-root">
+    <canvas id="scene" aria-label="냥토피아 3D 건설 지도"></canvas>
+    <noscript>이 게임은 JavaScript가 필요합니다.</noscript>
+  </main>
+  <script type="module" src="/src/v2.ts"></script>
+</body>
+</html>

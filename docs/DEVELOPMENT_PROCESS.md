@@ -525,3 +525,21 @@ Claude Code bounded graphics pass로 고양이 도시의 창의성을 보강했�
 - `npm run build`: 2D와 v2 multi-page production build 통과
 - Playwright installed Chrome QA: desktop 2D initial/story/help, stage 3 sanitation/housing, 390×844 mobile, desktop WebGL v2 통과
 - 2D desktop/mobile horizontal overflow 0, `게임 방법` 모바일 접근 가능, v2 WebGL context 확인, console/page/HTTP 오류 0
+
+## 2026-08-17 · 3D v2 전체 게임 기능 이식
+
+정적인 건물 비교 장면은 실제 플레이 판단에 충분하지 않다는 사용자 피드백에 따라 폐기하고, 3D를 `simulation.ts`의 두 번째 완전한 화면으로 재구성했다. 2D와 규칙을 복제하지 않고 같은 `State`, `step`, `build`, `buildLinear`, `bulldoze`, 시설 진단, 회관·숙소 증축, 작업 정책, 황혼 배송, mission/guide 함수를 직접 사용한다. 3D 저장 키는 `nekopolis-v2-save`로 분리하고 기존 `nekopolis-save`를 명시적으로 복사하는 기능만 제공해 비교 플레이 중 2D 진행을 손상하지 않는다.
+
+Three.js scene adapter는 24×18 지형·강·산지 광맥, 모든 시설 종류, utility segment, 가동/경고 beacon, 선택 ring, 유효/무효 footprint ghost, 첫 계약 시작·도착 guide beacon을 상태에서 재구성한다. 좌클릭 시설 배치, 좌클릭 드래그 도로·전선·수도관, 우클릭 카메라 회전, 휠 확대, 인스펙터 철거·증축을 구현했다. 모바일에는 도움말과 `↶ ⌂ ↷ − ＋` 카메라 버튼을 유지하고 horizontal overflow를 제거했다.
+
+UI에는 4장 mission/NEXT, 전체 자원·변화량, pause/speed, 추천·기반망·생산·생활 도구, 해금 상태, 작업 정책, 시설 병목·연결·투입·산출, 황혼 배송, 저장·2D 가져오기·초기화를 연결했다. 폐기된 정적 v2 장면은 현재 파일에 남기지 않고 Git 기록으로만 복구한다.
+
+Reviewer 피드백 이후 paused/imported 저장도 자원을 소비하거나 tick을 진행하지 않고 다음 교대 기준 diagnostics를 재계산하도록 보강했다. 4장의 사료·위생 모래·자립 유지 NEXT를 구체적인 행동으로 확장하고, 회관·숙소 증축 카드에 코인·전력·정수·노동·증가량 전체를 표시한다. 취수장에는 잘못된 정수관 상태를 표시하지 않으며 모바일 도움말 안에서 수동 저장과 2D 가져오기에 접근할 수 있다.
+
+검증 결과:
+
+- `npm test -- --run`: 68/68 통과
+- `npm run typecheck`: 통과
+- `npm run build`: 2D와 playable v2 multi-page production build 통과
+- Installed Chrome 실조작: 도로 4칸 드래그, 전선·수도관 segment, 정수장 배치·선택·철거·재배치, 작업 정책, 저장 재로드·2D 가져오기, 4장 사료/모래 NEXT, 진단 복원, 취수장 label, 전체 증축 요구량 통과
+- Desktop 1440×960 및 mobile 390×844 WebGL context, horizontal overflow 0, console/page/HTTP 오류 0
