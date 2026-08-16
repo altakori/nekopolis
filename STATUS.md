@@ -1,4 +1,4 @@
-# Nekopolis Foundry — 현재 상태
+# Nekopolis Foundry — 후속 수정 상태
 
 업데이트: 2026-08-16
 
@@ -6,95 +6,131 @@
 
 - Repository: `https://github.com/altakori/nekopolis-foundry`
 - Branch: `perf/living-city-render-budget`
-- Base HEAD: `a8ee9df0d3bdbafecfd2445ad08863fdb7947d14`
+- Base HEAD: `9e677e837d41fd05d07c89c517037d481d238b0a`
 - `main` 미병합
-- 이 문서 작성 시점의 변경은 아직 uncommitted이며 fresh exact-snapshot review 대기 중
+- 이 문서 작성 시점의 후속 수정은 uncommitted이며 fresh exact-snapshot review 전 상태
 
-## 이번 변경
+## 사용자 교정
 
-### 2.5D 도시와 연결성
+1. 숙소는 최대 고양이 수가 아니라 실제 사용 가능한 고양이 수를 늘린다.
+2. 회관이 `MAX CAT`을 늘린다.
+3. 전체 지도를 움직일 때 발생하는 큰 FPS 하락을 제거한다.
 
-- 모든 주요 시설을 top/left/right 면과 지붕·문·굴뚝·탱크를 갖춘 volumetric 2.5D 건물로 표현
-- 고양이 귀·발바닥·수염·물고기·꼬리 motif를 구조물에 통합
-- raised road, side wall, 강 위 bridge, 난간·plank·교각
-- 시설을 projected depth로 정렬
-- road-facing footprint edge와 road cell 사이의 midpoint를 door anchor로 사용
-- 진입로와 물류 route를 footprint 중심이 아닌 visible door에 연결
+## 구현
 
-### Living-city interaction
+### 숙소와 회관 역할 분리
 
-- 화물차: door→도로 BFS→door 왕복, 양 끝 하역 dwell, 이동 중에만 wheel/bob
-- 고양이 주민: 연결 시설 사이 route 이동, 출입구 대기, 이동 중에만 보행 bob
-- 시설 `diagnostics.online`과 연기·물 흐름·conveyor·steam·창문 activity 연동
-- offline 시설 dimming, online 시설 low-cost halo
-- 전력·정수 소비 시설 선택 시 관련 network 자동 강조
-- 선택 건물 벽면 service riser/terminal: 연결 solid, 미연결 dashed red
-- utility pulse를 segment당 복제가 아닌 network 전체 high/balanced/low `3/2/1`개로 제한
-- mobile mission card 기본 compact, 44px `임무 보기/접기` toggle
-- runtime reduced-motion 변경 시 continuous frame scheduling 중지
+- 도시 max는 기본 4이며 회관 레벨당 +4로만 증가한다.
+- 숙소는 max 계산에서 제외했다.
+- 전력·정수·외부도로가 연결된 숙소가 실제 resident target을 제공한다.
+  - LV.1: 실제 고양이 +2
+  - LV.2: 실제 고양이 +4
+  - LV.3: 실제 고양이 +7
+- 실제 목표 인구는 `min(회관 max, 4 + online dorm resident slots)`이다.
+- 회관이 없으면 연결 숙소가 있어도 기본 max 4를 넘지 않는다.
+- 미연결 숙소는 실제 주민을 추가하지 않는다.
+- 숙소 upgrade는 max를 직접 변경하지 않고 simulation cycle을 통해 주민과 가용 노동을 늘린다.
+- UI/README/game brief의 숙소 문구는 `실제 고양이`, 회관 문구는 `최대 고양이`로 구분했다.
 
-### Simulation / UI consistency
+### Map pan FPS
 
-- 24×18 확장 지구 및 20×14 저장 좌표 migration
-- 숙소 LV.1–3 progression과 실제 인구 기반 노동력
-- utility 중간 교차/junction 연결, 전선·수도관 layer 독립
-- 전력·물·노동·도로·원료 다중 warning badge
-- 가용/총 전력·정수·고양이 HUD
+기존 root cause:
 
-## 검증 결과
+- `pointermove`마다 `setPan()` 호출
+- 매 event마다 React render와 geometry callback 재생성
+- terrain/dynamic Canvas 반복 redraw
+- pointer interaction이 full Canvas 60fps budget을 강제
+- pan commit마다 `ResizeObserver`가 재등록되어 terrain이 한 번 더 redraw
+
+수정:
+
+- drag 중 React state를 바꾸지 않는다.
+- 두 Canvas layer에 동일한 GPU `translate3d` preview를 적용한다.
+- pointer-up에서 누적 delta를 `setPan()` 한 번으로 commit한다.
+- commit 시 terrain/dynamic을 새 좌표로 한 번 그리고 임시 transform을 해제한다.
+- `terrainLatest` ref를 사용해 ResizeObserver를 mount 시 1회만 등록한다.
+- mouse·touch·pen 모두 연속 `clientX/Y` 좌표 차이를 사용한다.
+- `.map-layer`에 `will-change: transform`을 적용한다.
+
+## 테스트
 
 정적/자동:
 
-- `npm test`: 57/57 통과
+- `npm test`: 60/60 통과
 - `npm run typecheck`: 통과
 - `npm run build`: 통과
 - `git diff --check`: 통과
 
-Browser regression:
+Simulation regression:
 
-- `bridge-qa.cjs`: bridge 고유 stroke 4, overflow 0, console 오류 0
-- `warning-network-qa.cjs`: 5종 warning stack과 utility 연결 통과
-- `dorm-upgrade-qa.cjs`: LV.1→2 footprint·비용·용량 통과
-- `interaction-qa.cjs`: background 30.4fps, interaction 58.3fps, active p95 29.3ms, paused drag p95 17.7ms
-- `polish-qa.cjs`: stage-4 생산·배송·animation·mobile layout 통과
-- `living-city-qa.cjs`:
-  - mobile compact 기본
-  - toggle 44px와 `aria-expanded` 전환
-  - compact/expanded horizontal overflow 0
-  - 선택 전력망 stroke 1→2, 강조 stroke 2, frame hash 변화
-  - reduced-motion idle frame 0, pointer input 후 dirty frame 1
-  - console 오류 0
+- 회관만 max를 높임
+- 회관 없이 숙소만 있어도 population/max 4 유지
+- 회관 LV.1 + 연결 숙소 LV.1에서 실제 고양이 6까지 증가
+- 미연결 숙소는 주민을 추가하지 않음
+- 숙소 LV.2에서 실제 고양이 8까지 증가하지만 max 8 유지
+- 숙소 upgrade 비용·footprint·노동 요구조건 유지
+- paused 구 저장은 stale dorm capacity를 폐기하고 hall level로 max를 즉시 재계산하며 population·labor도 max 이하로 정규화
+- max 초과 주민은 노동 배정 전에 조정하고, 숙소 offline 퇴거는 전원이 근무 중일 때 다음 shift로 보류해 production·diagnostics·HUD의 할당 합계를 일치시킴
 
-Performance:
+Dorm browser QA:
 
-- CPU 4×·390×844 반복 측정은 host 부하에 따라 16.7–27.4fps 변동
-- clean repeat에서 기존 27.4fps baseline 재현
-- adaptive `low`, DPR 1.5, overflow 0
+- footprint 4칸 모두 LV.2
+- population `6 → 6 → 8`
+- max `8 → 8 → 8`
+- coin 90, power 2, water 1 비용
+- inspector `실제 고양이 +2/+3`
+- console 오류 0
 
-Visual evidence:
+Desktop pan QA:
 
-- `qa-art/living-city-mobile-compact.png`
-- `qa-art/living-city-mobile-expanded.png`
-- `qa-art/living-city-selected-network.png`
-- 스크린샷은 로컬 evidence이며 Git commit 대상이 아님
-- mobile mission occlusion 개선, service terminal/warning badge 비중첩, door apron cart 배치, release-blocking clipping 없음
+- compositor transform 24회
+- 두 Canvas layer transform 일치
+- drag 중 terrain redraw 0
+- commit terrain redraw 1
+- commit latency 1ms
+- transform 정상 해제
+- 이동 전후 Canvas hash 변화
+- console 오류 0
 
-## 재현 가능한 신규 QA
+CPU 4× mobile touch pan QA (390×844, DPR 3 device):
 
-최종 commit에 아래 script만 강제 포함한다.
+- 실제 `touchStart/touchMove/touchEnd` 사용
+- compositor transform 23회
+- drag 중 terrain redraw 0
+- commit terrain redraw 1
+- commit latency 5.4ms
+- main-thread 40.2%
+- 29.5 FPS, adaptive `low`, Canvas DPR 1.5
+- horizontal overflow 0
+- console 오류 0
 
-- `qa-art/bridge-qa.cjs`
-- `qa-art/living-city-qa.cjs`
+전체 browser regression:
 
-스크린샷과 stale reviewer manifest는 포함하지 않는다.
+- bridge QA 통과: bridge stroke 4, overflow 0
+- warning/network QA 통과
+- interaction QA: background 31.0fps, active 60.4fps, p95 19.9ms, paused drag p95 17.6ms
+- polish QA: stage-4 animation/production/delivery/mobile layout 통과
+- living-city QA: mission compact/toggle, network selection, reduced-motion 통과
+- 모든 fixture console 오류 0
+
+## 재현 가능한 QA script
+
+Commit 대상:
+
+- `qa-art/dorm-upgrade-qa.cjs`
+- `qa-art/pan-performance-qa.cjs`
+- `qa-art/mobile-pan-performance-qa.cjs`
+
+스크린샷, 임시 exact checkout, stale review manifest는 commit하지 않는다.
 
 ## 남은 절차
 
-1. 정확한 staged tree 생성
-2. cached diff SHA-256과 staged tree manifest 기록
-3. clean-index checkout에서 test/typecheck/build 재검증
-4. fresh independent reviewer `APPROVE`
-5. topic branch commit/push
-6. `main`에는 자동 merge하지 않음
+1. 최종 정적 검증 재실행
+2. 의도한 파일만 stage
+3. staged tree와 cached diff SHA-256 기록
+4. clean staged-tree export에서 test/typecheck/build
+5. fresh independent reviewer `APPROVE`
+6. 승인된 topic branch commit/push
+7. `main`에는 자동 merge하지 않음
 
 Commit 형식은 `<gitmoji> type(scope): summary`이며 robot emoji는 사용하지 않는다.

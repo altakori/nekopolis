@@ -474,3 +474,21 @@ Claude Code bounded graphics pass로 고양이 도시의 창의성을 보강했�
 - desktop interaction: background 30.4fps, pointer 58.3fps, active p95 29.3ms, paused drag p95 17.7ms
 - CPU 4×·390×844 반복 측정은 headless host 부하에 따라 16.7–27.4fps로 변동했으며, clean repeat에서 기존 27.4fps baseline을 재현; adaptive `low`, DPR 1.5, overflow 0
 - desktop/mobile/selected-network screenshot 직접 검사: mission occlusion 개선, service terminal과 warning badge 비중첩, door apron cart 배치, release-blocking clipping 없음
+
+## 2026-08-16 · 숙소/회관 역할 교정과 compositor pan
+
+사용자 플레이에서 숙소가 `MAX CAT`을 늘리고 회관과 역할이 겹치는 문제를 확인했다. 현행 규칙은 이 문서의 이전 숙소-capacity 기록을 대체한다. 도시 최대 고양이는 기본 4에서 시작해 회관 레벨당 +4로만 증가한다. 전력·정수·외부도로가 연결된 숙소는 회관 최대치 안에서 LV.1/2/3별 실제 고양이 +2/+4/+7의 주민 목표를 제공한다. 숙소 증축은 최대치를 바꾸지 않으며 simulation cycle을 거쳐 실제 주민과 가용 노동이 증가한다. 미연결 숙소와 회관 없는 숙소는 추가 주민을 만들지 않는다.
+
+지도 pan의 FPS 하락은 `pointermove`마다 `setPan()`을 호출해 React render, geometry callback 재생성, terrain/dynamic Canvas redraw가 연쇄된 것이 원인이었다. drag 중에는 React state를 바꾸지 않고 두 Canvas layer에 동일한 GPU `translate3d` preview를 적용한다. pointer-up에서 누적 delta를 한 번 commit하고 새 좌표로 terrain/dynamic을 다시 그린 뒤 transform을 해제한다. mouse·touch·pen에서 `movementX/Y` 대신 연속 `clientX/Y` 차이를 사용한다. `ResizeObserver`도 renderer ref를 읽는 mount-once 구조로 바꿔 pan commit 때 중복 terrain redraw가 발생하지 않게 했다.
+
+검증 결과:
+
+- `npm test`: 60/60 통과
+- `npm run typecheck`, `npm run build`, `git diff --check`: 통과
+- 숙소 browser flow: LV.1→2, 실제 population `6→6→8`, max `8→8→8`, footprint 4칸 LV.2, console 오류 0
+- paused 구 저장 migration: stale dorm capacity를 폐기하고 hall level로 max를 즉시 재계산하며 population·labor도 max 이하로 정규화
+- max 초과 주민은 노동 배정 전에 조정하고, 숙소 offline으로 목표가 낮아져도 모든 주민이 근무 중이면 퇴거를 다음 shift로 보류해 생산·시설 diagnostics·HUD 노동 합계를 일치시킴
+- desktop pan: compositor transform 24회, drag 중 terrain redraw 0, commit redraw 1, commit latency 1ms
+- CPU 4×·390×844 touch pan: compositor transform 23회, drag 중 terrain redraw 0, commit redraw 1, commit latency 5.4ms, main-thread 40.2%, 29.5fps, adaptive `low`, DPR 1.5, overflow 0
+- bridge, warning/network, interaction, polish, living-city browser regression: 모두 통과, console 오류 0
+- desktop interaction: background 31.0fps, pointer 60.4fps, active p95 19.9ms, paused drag p95 17.6ms
