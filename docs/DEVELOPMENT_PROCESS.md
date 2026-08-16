@@ -543,3 +543,23 @@ Reviewer 피드백 이후 paused/imported 저장도 자원을 소비하거나 ti
 - `npm run build`: 2D와 playable v2 multi-page production build 통과
 - Installed Chrome 실조작: 도로 4칸 드래그, 전선·수도관 segment, 정수장 배치·선택·철거·재배치, 작업 정책, 저장 재로드·2D 가져오기, 4장 사료/모래 NEXT, 진단 복원, 취수장 label, 전체 증축 요구량 통과
 - Desktop 1440×960 및 mobile 390×844 WebGL context, horizontal overflow 0, console/page/HTTP 오류 0
+
+## 2026-08-17 · 2D/3D utility와 노동 생명주기 polish
+
+장시간 자체 검수 요청에 따라 공통 simulation부터 두 화면의 입력·표현·회귀 QA까지 다시 점검했다. 순간 완료형 회관·숙소 증축이 `laborUsed`에 노동을 남겨 paused 상태에서 영구 점유처럼 보이던 원인을 제거했다. 노동은 업그레이드 가능 여부를 검사할 때만 필요하며 승인 즉시 전원 복귀한다.
+
+전선·수도관은 다른 칸까지 드래그해야 하고 여러 선분이 이미 완전히 덮은 경로도 거부한다. 같은 종류 선로의 중간 교차점을 정식 junction으로 통일하고, 공급원에서 도달 가능한 활성 선로 칸을 공통 simulation 함수로 계산한다. 기존 선로를 일부 따라 연장하면 새 edge만 과금하며, 잘못 그은 선은 선로 위 칸을 선택해 가장 최근 선분 하나만 철거하고 남은 망에서 다시 계산한 고유 edge 시공비의 35%를 회수한다. 2D에는 유효/무효 preview·선택 marker·network legend를, 3D에는 고립망 색·전봇대/수도 밸브/junction·endpoint preview·선택 ring을 추가했다.
+
+후속 독립 감사에서 3D occupied-cell 선택 분기가 utility drag보다 먼저 실행되는 문제를 찾아, 시설 위 drag는 선로 시작으로 처리하고 같은 위치 tap은 inspector 선택으로 분기했다. resource-only simulation tick은 grid·utility·online diagnostics·선택·guide signature가 바뀌지 않으면 `V2Scene.sync()`를 건너뛰며, pointer picking용 Raycaster/Vector2를 재사용한다. 거부된 전체 drag preview는 다음 pointer 이동 또는 tool 변경까지 유지한다. canvas에는 접근성 이름과 방향키·확대/축소·Home keyboard camera 조작을 추가했다.
+
+검증 결과:
+
+- `npm test -- --run`: 73/73 통과
+- 회관·숙소 실제 UI 증축 후 `laborUsedDelta: 0`
+- 2D/3D 선분 1개 철거, 고유 edge 기준 35% 환급, 완전 중복·단일칸 선로 차단, 겹친 연장 선로의 새 edge 과금 통과
+- 2D desktop pan commit 3.2ms; 4× CPU-throttled mobile commit 13.2ms, overflow 0
+- 3D desktop/mobile WebGL, 실제 touch 건설, save/import, 콘솔·page·HTTP 오류 0
+- 3D 시설 위 전선 drag, utility-tool 시설 tap 선택, resource-only tick scene rebuild 0, keyboard camera 조작 통과
+- 2D 320×568 short viewport: horizontal/vertical scroll 0, board 195px, dock bottom 568px
+- 3D utility stress(전선 17선·수도관 20선): 60.33 FPS, 최대 frame gap 17.1ms, overflow 0, 오류 0
+- 노후 QA의 4174 고정 의존을 5173 기본값과 `NEKOPOLIS_URL` override로 교체했다. 브라우저는 `NEKOPOLIS_BROWSER_PATH` override, 존재하는 Windows 표준 Chrome, Playwright 기본 브라우저 순으로 선택해 로컬 재현성과 Linux/macOS/CI portability를 함께 보존한다.

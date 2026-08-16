@@ -1,4 +1,7 @@
 const { chromium } = require('playwright');
+const WINDOWS_CHROME='C:/Program Files/Google/Chrome/Application/chrome.exe';
+const browserPath=process.env.NEKOPOLIS_BROWSER_PATH||(process.platform==='win32'&&require('fs').existsSync(WINDOWS_CHROME)?WINDOWS_CHROME:undefined);
+const URL = process.env.NEKOPOLIS_URL || 'http://127.0.0.1:5173/';
 
 const W = 24;
 const H = 18;
@@ -13,7 +16,7 @@ const put = (kind, x, y, size = 1) => {
 };
 
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({headless:true,...(browserPath?{executablePath:browserPath}:{})});
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   const errors = [];
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
@@ -37,7 +40,7 @@ const put = (kind, x, y, size = 1) => {
     deliveries: 0, lastDispatchTick: -12, log: [],
   };
 
-  await page.goto('http://127.0.0.1:4174/');
+  await page.goto(URL);
   await page.evaluate(saved => localStorage.setItem('nekopolis-save', JSON.stringify(saved)), state);
   await page.reload();
   await page.waitForTimeout(1200);
@@ -51,9 +54,9 @@ const put = (kind, x, y, size = 1) => {
   const base = Math.min(box.width / (W + 2), box.height / (H * .72));
   const tw = base * 1.2;
   const th = base * .4 * 1.2;
-  const x = box.x + box.width / 2;
-  const y = box.y + box.height * .09 + (5.5 + 5.5) * th * .9;
-  await page.mouse.click(x, y);
+  const point = (gx, gy) => ({ x: box.x + box.width / 2 + (gx - gy) * tw * .52, y: box.y + box.height * .09 + (gx + gy) * th * .9 });
+  const dormPoint = point(5.5, 5.5);
+  await page.mouse.click(dormPoint.x, dormPoint.y);
 
   const inspector = page.locator('.inspector');
   await inspector.waitFor();
@@ -63,6 +66,18 @@ const put = (kind, x, y, size = 1) => {
   await button.click();
   await page.waitForTimeout(120);
   const afterUpgrade = await page.evaluate(() => JSON.parse(localStorage.getItem('nekopolis-save')));
+  const dormAfterText = (await inspector.innerText()).replace(/\s+/g, ' ');
+  if (afterUpgrade.laborUsed !== beforeSave.laborUsed) throw new Error('Dorm upgrade reserved labor instead of returning it');
+  const hallPoint = point(9.5, 5.5);
+  await page.mouse.click(hallPoint.x, hallPoint.y);
+  await inspector.waitFor();
+  const hallBefore = await page.evaluate(() => JSON.parse(localStorage.getItem('nekopolis-save')));
+  const hallButton = inspector.locator('.upgrade-panel button');
+  if (await hallButton.isDisabled()) throw new Error(`Hall upgrade disabled: ${(await inspector.innerText()).replace(/\s+/g, ' ')}`);
+  await hallButton.click();
+  await page.waitForTimeout(120);
+  const hallAfter = await page.evaluate(() => JSON.parse(localStorage.getItem('nekopolis-save')));
+  if (hallAfter.laborUsed !== hallBefore.laborUsed) throw new Error('Hall upgrade reserved labor instead of returning it');
 
   await page.getByRole('button', { name: '×1', exact: true }).click();
   await page.getByRole('button', { name: '×2', exact: true }).click();
@@ -70,12 +85,13 @@ const put = (kind, x, y, size = 1) => {
   await page.waitForTimeout(2300);
   await page.getByRole('button', { name: 'Ⅱ' }).click();
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('nekopolis-save')));
-  const after = (await inspector.innerText()).replace(/\s+/g, ' ');
+  const hallAfterText = (await inspector.innerText()).replace(/\s+/g, ' ');
   const cells = [dorm, dorm + 1, dorm + W, dorm + W + 1];
   const levels = cells.map(index => saved.grid[index]?.level);
   const result = {
     before,
-    after,
+    after: dormAfterText,
+    hallAfter: hallAfterText,
     levels,
     population: [beforeSave.resources.population, afterUpgrade.resources.population, saved.resources.population],
     capacity: [beforeSave.resources.capacity, afterUpgrade.resources.capacity, saved.resources.capacity],
@@ -83,6 +99,8 @@ const put = (kind, x, y, size = 1) => {
     powerDelta: beforeSave.resources.power - afterUpgrade.resources.power,
     waterDelta: beforeSave.resources.water - afterUpgrade.resources.water,
     laborDelta: beforeSave.resources.labor - afterUpgrade.resources.labor,
+    laborUsedDelta: beforeSave.laborUsed - afterUpgrade.laborUsed,
+    hallLaborUsedDelta: hallBefore.laborUsed - hallAfter.laborUsed,
     errors,
   };
   console.log(JSON.stringify(result, null, 2));
@@ -93,9 +111,14 @@ const put = (kind, x, y, size = 1) => {
     && result.population[0] === 6
     && result.population[1] === 6
     && result.population[2] === 8
-    && result.capacity.every(value => value === 8)
-    && after.includes('LV.2')
-    && after.includes('실제 고양이 +3')
+    && result.capacity[0] === 8
+    && result.capacity[1] === 8
+    && result.capacity[2] === 12
+    && dormAfterText.includes('LV.2')
+    && dormAfterText.includes('실제 고양이 +3')
+    && hallAfter.grid[hall]?.level === 2
+    && result.laborUsedDelta === 0
+    && result.hallLaborUsedDelta === 0
     && errors.length === 0;
   if (!ok) throw new Error('Dorm resident upgrade browser assertions failed');
   await browser.close();

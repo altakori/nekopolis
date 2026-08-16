@@ -1,4 +1,7 @@
 const { chromium } = require('playwright');
+const WINDOWS_CHROME='C:/Program Files/Google/Chrome/Application/chrome.exe';
+const browserPath=process.env.NEKOPOLIS_BROWSER_PATH||(process.platform==='win32'&&require('fs').existsSync(WINDOWS_CHROME)?WINDOWS_CHROME:undefined);
+const URL = process.env.NEKOPOLIS_URL || 'http://127.0.0.1:5173/';
 
 const hashCanvas = async page => page.evaluate(async () => {
   const canvas = document.querySelector('.dynamic-layer');
@@ -9,7 +12,7 @@ const hashCanvas = async page => page.evaluate(async () => {
 });
 
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({headless:true,...(browserPath?{executablePath:browserPath}:{})});
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
   const errors = [];
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
@@ -24,7 +27,7 @@ const hashCanvas = async page => page.evaluate(async () => {
       return original.apply(this, args);
     };
   });
-  await page.goto('http://127.0.0.1:4174/?perf=1');
+  await page.goto(`${URL}?perf=1`);
   await page.waitForTimeout(600);
   const canvas = page.locator('.dynamic-layer');
   const box = await canvas.boundingBox();

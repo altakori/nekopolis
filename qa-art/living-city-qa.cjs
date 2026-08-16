@@ -1,6 +1,8 @@
 const { chromium } = require('playwright');
+const WINDOWS_CHROME='C:/Program Files/Google/Chrome/Application/chrome.exe';
+const browserPath=process.env.NEKOPOLIS_BROWSER_PATH||(process.platform==='win32'&&require('fs').existsSync(WINDOWS_CHROME)?WINDOWS_CHROME:undefined);
 
-const URL = 'http://127.0.0.1:4174/';
+const URL = process.env.NEKOPOLIS_URL || 'http://127.0.0.1:5173/';
 const W = 24;
 const idx = (x, y) => y * W + x;
 
@@ -55,7 +57,7 @@ async function canvasHash(page) {
 }
 
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({headless:true,...(browserPath?{executablePath:browserPath}:{})});
   const errors = [];
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1.5 });
@@ -89,7 +91,10 @@ async function canvasHash(page) {
   await mobile.screenshot({ path: 'qa-art/living-city-mobile-expanded.png' });
   await mobile.locator('.mission-toggle').click();
   await mobile.screenshot({ path: 'qa-art/living-city-mobile-compact.png' });
+  await mobile.getByRole('button', { name: '기반망' }).click();await mobile.getByRole('button', { name: /전선/ }).click();const mobileUtility=await mobile.evaluate(()=>{const dock=document.querySelector('.build-dock').getBoundingClientRect(),cut=document.querySelector('.utility-cut').getBoundingClientRect();return{overflow:document.documentElement.scrollWidth-innerWidth,cutClip:Math.max(0,cut.right-innerWidth),dockBottom:dock.bottom,guide:Boolean(document.querySelector('.utility-guide'))}});if(mobileUtility.overflow||mobileUtility.cutClip||!mobileUtility.guide)throw new Error(`Mobile utility layout failed: ${JSON.stringify(mobileUtility)}`);
   await mobile.close();
+
+  const shortMobile=await browser.newPage({viewport:{width:320,height:568},isMobile:true,hasTouch:true});shortMobile.on('console',message=>{if(message.type()==='error')errors.push(`short-mobile: ${message.text()}`)});await shortMobile.goto(URL);await shortMobile.waitForTimeout(250);const shortViewport=await shortMobile.evaluate(()=>{const board=document.querySelector('.board').getBoundingClientRect(),dock=document.querySelector('.build-dock').getBoundingClientRect();return{horizontal:document.documentElement.scrollWidth-innerWidth,vertical:document.documentElement.scrollHeight-innerHeight,boardHeight:board.height,dockBottom:dock.bottom}});await shortMobile.close();
 
   const city = state();
   const plant = put(city, 'plant', 5, 6);
@@ -126,6 +131,11 @@ async function canvasHash(page) {
     glowingPowerStrokes: window.__frameStrokes.filter(s => s.style === '#f2c94c' && s.width >= 2 && s.alpha >= .9).length,
   }));
   await desktop.screenshot({ path: 'qa-art/living-city-selected-network.png' });
+  await desktop.getByRole('button', { name: '기반망' }).click();
+  await desktop.getByRole('button', { name: /전선/ }).click();
+  const linePoint = await desktop.evaluate(({ x, y }) => { const rect = document.querySelector('.dynamic-layer').getBoundingClientRect(), base = Math.min(rect.width / 26, rect.height / (18 * .72)), tw = base * 1.2, th = base * .4 * 1.2; return { x: rect.left + rect.width / 2 + (x - y) * tw * .52, y: rect.top + rect.height * .09 + (x + y) * th * .9 }; }, { x: 8, y: 6 });
+  await desktop.mouse.click(linePoint.x, linePoint.y);await desktop.waitForTimeout(80);
+  const cutButton=desktop.locator('.utility-cut');if(await cutButton.isDisabled())throw new Error('2D utility segment is not selectable for removal');const beforeCut=await desktop.evaluate(()=>JSON.parse(localStorage.getItem('nekopolis-save')));await cutButton.click();await desktop.waitForTimeout(80);const afterCut=await desktop.evaluate(()=>JSON.parse(localStorage.getItem('nekopolis-save')));const utilityRemoval={before:beforeCut.utilities.wire.length,after:afterCut.utilities.wire.length,refund:afterCut.resources.coins-beforeCut.resources.coins,guide:await desktop.locator('.utility-guide').innerText()};
 
   await desktop.emulateMedia({ reducedMotion: 'reduce' });
   await desktop.waitForTimeout(160);
@@ -139,12 +149,15 @@ async function canvasHash(page) {
   const result = {
     compact,
     expanded,
+    mobileUtility,
+    shortViewport,
     selection: {
       baselinePowerStrokes,
       baselineHash,
       selectedHash,
       ...selected,
     },
+    utilityRemoval,
     reducedMotion: { idleFrames: reducedIdleFrames, framesAfterInput: reducedAfterInputFrames },
     errors,
   };
@@ -154,7 +167,9 @@ async function canvasHash(page) {
   if (compact.toggleHeight < 44) throw new Error(`Mission toggle is below 44px: ${compact.toggleHeight}`);
   if (compact.overflow > 0 || expanded.overflow > 0) throw new Error(`Horizontal overflow: compact=${compact.overflow}, expanded=${expanded.overflow}`);
   if (!expanded.expanded || expanded.ariaExpanded !== 'true') throw new Error('Mission toggle did not expand with matching aria state');
-  if (!selected.inspector || selected.title !== '바이오 발전소') throw new Error(`Plant selection failed: ${selected.title}`);
+  if(shortViewport.horizontal||shortViewport.vertical||shortViewport.boardHeight<150||shortViewport.dockBottom>568.5)throw new Error(`Short mobile viewport failed: ${JSON.stringify(shortViewport)}`);
+  if (!selected.inspector || selected.title !== '바이오 발전소') throw new Error(`Facility selection failed: ${JSON.stringify(selected)}`);
+  if(utilityRemoval.before!==1||utilityRemoval.after!==0||utilityRemoval.refund<=0||!utilityRemoval.guide.includes('교차'))throw new Error(`2D utility removal failed: ${JSON.stringify(utilityRemoval)}`);
   if (selected.powerStrokes <= baselinePowerStrokes) throw new Error(`Selected power network did not gain strokes: ${baselinePowerStrokes} -> ${selected.powerStrokes}`);
   if (!selected.glowingPowerStrokes) throw new Error('Selected power network has no high-emphasis stroke');
   if (selectedHash === baselineHash) throw new Error('Canvas frame did not visibly change after facility selection');

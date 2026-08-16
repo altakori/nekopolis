@@ -5,8 +5,8 @@
 ## 저장소
 
 - Repository: `https://github.com/altakori/nekopolis-foundry`
-- Branch: `feat/playable-3d-v2`
-- Base HEAD: `df00b820470b4935896291d17adbeb333f39ddc1`
+- Branch: `fix/v2-utility-labor-polish`
+- Base HEAD: `c0eded907abc0f58dbd22c06c926f237d0f27b09`
 - `main` 미병합
 - 승인된 2D 이야기·위생·주거 확장 위에서 정적 3D 비교본을 완전 플레이 가능한 별도 3D surface로 확장
 
@@ -16,7 +16,11 @@
 - 산지 전용 모래 원석 채석장과 공정수 기반 고양이 모래 공장을 추가했다. 시민은 위생 모래를 소비하며 부족 시 행복도가 하락한다.
 - 숙소 LV.1/2/3을 각각 단독 주택·발코니 빌라·고층 아파트로 다시 그렸다.
 - `v2.html`은 `simulation.ts`를 2D와 함께 사용하는 완전 플레이 가능한 Three.js 버전이다. 건설·utility·계약·생산·이주·업그레이드·작업 정책·배송·저장 기능을 제공하며 `npm run dev:v2`로 5172 포트에서 실행한다. 5174는 다른 게임용으로 보존한다.
-- 68/68 tests, typecheck, 2D+v2 production build, 실제 3D 도로·전선·수도관·시설·철거·저장 조작과 desktop/mobile/WebGL 브라우저 QA를 통과했다.
+- 전선·수도관은 같은 종류 선로가 중간에서 교차해도 접속되고, 공급원에 연결된 활성망과 고립망을 2D·3D에서 구분한다. 선택한 칸에서 가장 최근 선분 하나를 철거해 고유 edge 기준 35%를 회수하고, 겹쳐 연장할 때는 새 edge만 과금한다.
+- 3D는 시설 위 utility drag와 시설 tap 선택을 함께 지원하고, resource-only tick에는 전체 scene geometry를 재생성하지 않는다. pointer picking은 Raycaster를 재사용하며 canvas 키보드 camera 조작을 제공한다.
+- 2D mobile shell의 강제 660px 최소 높이를 제거해 320×568 short viewport에서도 문서 scroll 없이 board와 dock을 한 화면에 유지한다.
+- 회관·숙소 업그레이드는 가용 노동력을 조건으로 검사하지만 순간 완료 후 작업 고양이를 즉시 반환한다. paused 상태에서도 `laborUsed`가 증가하지 않는다.
+- 73/73 tests, typecheck, 2D+v2 production build, 2D/3D 선로 철거·중복/단일칸 차단·교차 접속·회관/숙소 노동 즉시 반환·desktop/mobile/WebGL·pan performance QA를 통과했다.
 
 ## 사용자 교정
 

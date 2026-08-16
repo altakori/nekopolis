@@ -1,7 +1,10 @@
-const { chromium } = require('playwright');
+const {chromium}=require('playwright');
+const WINDOWS_CHROME='C:/Program Files/Google/Chrome/Application/chrome.exe';
+const browserPath=process.env.NEKOPOLIS_BROWSER_PATH||(process.platform==='win32'&&require('fs').existsSync(WINDOWS_CHROME)?WINDOWS_CHROME:undefined);
+const URL = process.env.NEKOPOLIS_URL || 'http://127.0.0.1:5173/';
 
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser=await chromium.launch({headless:true,...(browserPath?{executablePath:browserPath}:{})});
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 3,
@@ -24,7 +27,7 @@ const { chromium } = require('playwright');
   });
   await session.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   await session.send('Performance.enable');
-  await page.goto('http://127.0.0.1:4174/?perf=1');
+  await page.goto(`${URL}?perf=1`);
   await page.waitForTimeout(1800);
   await page.getByRole('button', { name: '지도 이동' }).click();
   const canvas = page.locator('.dynamic-layer');
