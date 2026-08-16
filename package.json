@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:v2": "vite --port 5174 --strictPort",
+    "dev:v2": "vite --port 5172 --strictPort",
     "build": "tsc && vite build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
