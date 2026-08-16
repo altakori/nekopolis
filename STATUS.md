@@ -8,7 +8,7 @@
 - Branch: `feat/guided-first-contract`
 - Base HEAD: `56a45d6f457bf67d3eb7ecc52fad71c9de7398fe`
 - `main` 미병합
-- 이 문서 작성 시점의 첫 계약 가이드 수정은 uncommitted이며 fresh exact-snapshot review 전 상태
+- 첫 계약 가이드 수정은 exact-snapshot review 승인 후 `f629122`로 topic branch에 commit·push했으며 `main`에는 미병합 상태
 
 ## 사용자 교정
 
@@ -133,14 +133,14 @@ Commit 대상:
 
 스크린샷, 임시 exact checkout, stale review manifest는 commit하지 않는다.
 
-## 남은 절차
+## 완료된 절차
 
-1. 최종 정적 검증 재실행
-2. 의도한 파일만 stage
+1. 최종 정적 검증과 브라우저 QA 완료
+2. 의도한 7개 파일만 stage하고 worktree/index byte equality 확인
 3. staged tree와 cached diff SHA-256 기록
-4. clean staged-tree export에서 test/typecheck/build
+4. clean staged-tree export에서 test/typecheck/build 통과
 5. fresh independent reviewer `APPROVE`
-6. 승인된 topic branch commit/push
-7. `main`에는 자동 merge하지 않음
+6. 승인된 tree를 `f629122`로 commit하고 `origin/feat/guided-first-contract`에 push
+7. 로컬·원격 commit SHA 일치 확인, `main` 미병합 유지
 
 Commit 형식은 `<gitmoji> type(scope): summary`이며 robot emoji는 사용하지 않는다.

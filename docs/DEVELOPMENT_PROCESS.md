@@ -181,8 +181,8 @@ git ls-remote --heads origin feat/nekopolis-foundry
 - [x] 생산 체인과 병목이 관제 UI와 화면 오버레이에 일치한다.
 - [x] 마우스와 터치 기반 Pointer Events를 지원한다.
 - [x] 테스트, 타입 검사, 빌드, 데스크톱/모바일 브라우저 QA가 통과한다.
-- [ ] 독립 reviewer gate의 v2 `APPROVE`를 받는다.
-- [ ] private GitHub 원격과 배포 상태를 최종 확인한다.
+- [x] 독립 exact-snapshot reviewer gate의 `APPROVE`를 받았다.
+- [x] private GitHub topic branch의 로컬·원격 SHA 일치를 확인했다. `main` 미병합이므로 Pages 배포는 의도적으로 실행하지 않았다.
 
 ## 10. 연속 지형 아트 패스
 
@@ -499,10 +499,11 @@ Claude Code bounded graphics pass로 고양이 도시의 창의성을 보강했�
 
 버린 대안은 UI에 별도 connectivity boolean을 저장하는 방식과 고정된 “전선을 선택하세요” notice를 유지하는 방식이다. 둘 다 실제 배선·시설 상태와 어긋날 수 있어 채택하지 않았으며, 폐기한 prototype 코드는 남기지 않았다.
 
-검증 placeholder:
+검증 결과:
 
-- `npm test`: 실행 결과 기록
-- `npm run typecheck`: 실행 결과 기록
-- `npm run build`: 실행 결과 기록
-- `git diff --check`: 실행 결과 기록
-- 브라우저 reduced-motion 및 지도 가독성 QA: 실행 결과 기록
+- `npm test`: 63/63 통과
+- `npm run typecheck`: 통과
+- `npm run build`: 통과
+- `git diff --check`: 통과
+- 데스크톱·모바일에서 전선, 정수장 배치, 정수장 전력, 원수관의 4개 안내 단계를 검증했다. 각 단계의 안내 도구는 정확히 1개만 강조됐고 horizontal overflow와 console/HTTP 오류는 0이었다.
+- reduced-motion에서는 애니메이션 없이 정적 beacon·경로·추천 footprint가 유지됐다.
