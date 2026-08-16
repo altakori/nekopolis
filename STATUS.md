@@ -5,10 +5,10 @@
 ## 저장소
 
 - Repository: `https://github.com/altakori/nekopolis-foundry`
-- Branch: `perf/living-city-render-budget`
-- Base HEAD: `9e677e837d41fd05d07c89c517037d481d238b0a`
+- Branch: `feat/guided-first-contract`
+- Base HEAD: `56a45d6f457bf67d3eb7ecc52fad71c9de7398fe`
 - `main` 미병합
-- 이 문서 작성 시점의 후속 수정은 uncommitted이며 fresh exact-snapshot review 전 상태
+- 이 문서 작성 시점의 첫 계약 가이드 수정은 uncommitted이며 fresh exact-snapshot review 전 상태
 
 ## 사용자 교정
 
@@ -52,14 +52,24 @@
 - mouse·touch·pen 모두 연속 `clientX/Y` 좌표 차이를 사용한다.
 - `.map-layer`에 `will-change: transform`을 적용한다.
 
+### 첫 계약 지도 내 안내
+
+- 실제 전력·원수 연결 판정에서 다음 행동을 파생하는 `firstContractGuide()`를 추가했다.
+- 발전소→취수장 전선, 정수장 배치, 정수장 전력, 취수장→정수장 원수관, 정수 생산 관찰 순서로 안내한다.
+- 연결 단계는 지도 위 시작·도착 비콘과 점선 경로를 표시하고, 배치 단계는 안쪽의 유효한 2×2 추천 footprint만 표시한다.
+- 현재 필요한 건설 도구를 dock에서 강조하고 notice를 실제 다음 행동과 동기화한다.
+- 정수장 계약 문구와 체크를 전력·원수의 독립 실제 판정에 맞췄다.
+- Chrome의 첫 navigation `/favicon.ico` 404를 기존 오리지널 타이틀 SVG 자산으로 제거했다.
+
 ## 테스트
 
 정적/자동:
 
-- `npm test`: 60/60 통과
+- `npm test`: 63/63 통과
 - `npm run typecheck`: 통과
 - `npm run build`: 통과
 - `git diff --check`: 통과
+- 첫 계약 가이드 브라우저 QA: desktop/mobile × 4단계, 안내 도구 1개 강조, horizontal overflow 0, console/HTTP 오류 0
 
 Simulation regression:
 

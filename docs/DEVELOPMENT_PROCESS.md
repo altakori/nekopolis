@@ -492,3 +492,17 @@ Claude Code bounded graphics pass로 고양이 도시의 창의성을 보강했�
 - CPU 4×·390×844 touch pan: compositor transform 23회, drag 중 terrain redraw 0, commit redraw 1, commit latency 5.4ms, main-thread 40.2%, 29.5fps, adaptive `low`, DPR 1.5, overflow 0
 - bridge, warning/network, interaction, polish, living-city browser regression: 모두 통과, console 오류 0
 - desktop interaction: background 31.0fps, pointer 60.4fps, active p95 19.9ms, paused drag p95 17.6ms
+
+## 2026-08-16 · guided first-contract onboarding
+
+첫 계약에서 플레이어가 연결 순서를 추측하지 않도록 실제 `utilityConnected`/`facilityServed` 결과에서 다음 안내 단계와 추천 정수장 footprint를 파생했다. 단계는 발전소→취수장 전선, 정수장 배치, 정수장 전력, 취수장 원수관, 깨끗한 물 관찰 순서이며, 미션 문구도 정수장에 전력과 원수가 모두 필요하다는 시뮬레이션 규칙과 일치시켰다. 지도에는 저대비 점선 경로와 시작/도착 beacon을 그리되 reduced-motion에서는 정적인 표시만 사용한다. 도구 카드는 현재 단계의 도구만 시각 강조하고 자동 선택하지 않는다.
+
+버린 대안은 UI에 별도 connectivity boolean을 저장하는 방식과 고정된 “전선을 선택하세요” notice를 유지하는 방식이다. 둘 다 실제 배선·시설 상태와 어긋날 수 있어 채택하지 않았으며, 폐기한 prototype 코드는 남기지 않았다.
+
+검증 placeholder:
+
+- `npm test`: 실행 결과 기록
+- `npm run typecheck`: 실행 결과 기록
+- `npm run build`: 실행 결과 기록
+- `git diff --check`: 실행 결과 기록
+- 브라우저 reduced-motion 및 지도 가독성 QA: 실행 결과 기록

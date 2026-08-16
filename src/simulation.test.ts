@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {W,EXTERNAL_ROAD,HALL_UPGRADES,DORM_UPGRADES,initialState,build,buildLinear,buildIssue,bulldoze,step,dragLine,lineBuildCost,utilityConnected,isRiverCell,footprintCells,footprintCenter,idx,migrateState,hallUpgradeIssue,upgradeHall,dormUpgradeIssue,upgradeDorm,courierIssue,fulfillCourier,availableLabor,type State,type BuildingKind} from './simulation';
+import {W,EXTERNAL_ROAD,HALL_UPGRADES,DORM_UPGRADES,initialState,build,buildLinear,buildIssue,bulldoze,step,dragLine,lineBuildCost,utilityConnected,firstContractGuide,getMission,isRiverCell,footprintCells,footprintCenter,idx,migrateState,hallUpgradeIssue,upgradeHall,dormUpgradeIssue,upgradeDorm,courierIssue,fulfillCourier,availableLabor,type State,type BuildingKind} from './simulation';
 import {terrainGridBounds} from './terrain';
 
 const empty=()=>{const s=initialState();s.grid.fill(null);return s};
@@ -9,6 +9,12 @@ const roadTo=(s:State,x:number,y:number)=>{const roadY=Math.floor(EXTERNAL_ROAD/
 const runCycle=(s:State)=>{for(let i=0;i<3;i++)s=step(s);return s};
 /** Complete vector backbone: plant → intake → purifier, with a separate raw-water segment. */
 const utilities=()=>{const s=empty();put(s,'plant',0,0);put(s,'intake',2,1);put(s,'purifier',4,2);link(s,'wire',0,0,2,1);link(s,'wire',2,1,4,2);link(s,'pipe',2,1,4,2);return s};
+
+describe('guided first-contract onboarding',()=>{
+ it('derives the ordered next step from real utility connectivity',()=>{const s=empty();put(s,'plant',0,0);put(s,'intake',2,1);let guide=firstContractGuide(s);expect(guide.step).toBe('wire-starter');expect(guide.requiredTool).toBe('wire');link(s,'wire',0,0,2,1);guide=firstContractGuide(s);expect(guide.step).toBe('place-purifier');expect(guide.suggestedPurifierCells).toHaveLength(4);expect(guide.suggestedPurifierCells.every(i=>s.grid[i]===null)).toBe(true);expect(guide.suggestedPurifierAnchor%W).toBeLessThanOrEqual(W-7);const placed=build(s,'purifier',guide.suggestedPurifierAnchor)!;expect(firstContractGuide(placed).step).toBe('power-purifier');});
+ it('requires purifier power and raw water before observation',()=>{let s=empty();put(s,'plant',0,0);put(s,'intake',2,1);link(s,'wire',0,0,2,1);const purifier=build(s,'purifier',idx(10,10))!;s=purifier;const anchor=firstContractGuide(s).suggestedPurifierAnchor;expect(firstContractGuide(s).step).toBe('power-purifier');link(s,'wire',0,0,anchor%W,Math.floor(anchor/W));expect(firstContractGuide(s).step).toBe('pipe-purifier');link(s,'pipe',2,1,anchor%W,Math.floor(anchor/W));expect(firstContractGuide(s).step).toBe('observe-water');expect(firstContractGuide(s).instruction).toContain('기다리면');});
+ it('uses explicit mission wording for both purifier inputs',()=>{const mission=getMission(initialState());expect(mission.brief).toContain('전력');expect(mission.brief).toContain('원수관');expect(mission.checks.map(c=>c.label)).toEqual(expect.arrayContaining(['정수장 전력 공급','정수장 원수 공급']));});
+});
 
 describe('construction and geometry',()=>{
  it('keeps the outside-city gateway road as permanent infrastructure',()=>{const s=initialState(),n=bulldoze(s,EXTERNAL_ROAD);expect(n.grid[EXTERNAL_ROAD]?.kind).toBe('road');expect(n).toBe(s)});
