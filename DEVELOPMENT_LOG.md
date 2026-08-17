@@ -86,3 +86,11 @@
 - `qa-art/facilities-all-lv1-2d.png` / `facilities-all-lv1-3d.png`
 - `qa-art/facilities-all-lv2-2d.png` / `facilities-all-lv2-3d.png`
 - `qa-art/facilities-all-lv3-2d.png` / `facilities-all-lv3-3d.png`
+
+## 2026-08-17 — LV.3 회관 지붕·현실형 3D 강·공통 고양이 데칼
+
+- 회관 LV.3 좌우 지붕을 개별 맞배지붕으로 분리하고 중앙 타워는 낮은 4면 지붕으로 교체했다.
+- 3D 강은 Catmull–Rom 곡선 ribbon, 하상·자갈 둑·돌, 얕은 가장자리/깊은 중앙 색과 미세한 하류 물결 shader를 사용한다.
+- 3D 원뿔 귀·원통 발바닥 장식을 제거하고 투명 CanvasTexture 일러스트 데칼을 건물 정면에 부착했다.
+- 2D도 같은 `cat-decals.ts` 얼굴·발바닥 일러스트를 Canvas에 그려 두 화면의 고양이 그림 언어를 통일했다.
+- `npm test` 87/87, typecheck, production build, diff check와 `qa-art/hall-lv3-roof-river-decal-final.png` 실제 렌더를 확인했다.
