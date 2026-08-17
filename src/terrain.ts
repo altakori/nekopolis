@@ -40,12 +40,18 @@ export function drawTerrainBase(ctx:CanvasRenderingContext2D,g:TerrainGeometry,s
 
  const river=riverPoints(screen);
  ctx.save();clipToLand(ctx,screen);ctx.lineCap='round';ctx.lineJoin='round';
- pathThrough(ctx,river);ctx.strokeStyle='#5a8d7770';ctx.lineWidth=g.tw*1.68;ctx.stroke();
- pathThrough(ctx,river);ctx.strokeStyle='#d7dda1';ctx.lineWidth=g.tw*1.45;ctx.stroke();
- pathThrough(ctx,river);ctx.strokeStyle='#a8cc80';ctx.lineWidth=g.tw*1.26;ctx.stroke();
- const water=ctx.createLinearGradient(0,river[0][1],0,river[river.length-1][1]);water.addColorStop(0,'#80d7e4');water.addColorStop(.48,'#56bbd3');water.addColorStop(1,'#3b9fc5');
- pathThrough(ctx,river);ctx.strokeStyle=water;ctx.lineWidth=g.tw*1.12;ctx.stroke();
- for(let i=1;i<river.length-1;i++)for(const side of[-1,1]){const prev=river[i-1],next=river[i+1],[x,y]=river[i],dx=next[0]-prev[0],dy=next[1]-prev[1],len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,offset=g.tw*(.65+(i%2)*.035),ox=nx*offset*side,oy=ny*offset*side;ctx.strokeStyle=side>0?'#9ead68':'#6f8a58';ctx.lineWidth=1.25;for(let r=0;r<3+(i%2);r++){const spread=(r-1.5)*g.tw*.045,bx=x+ox+dx/len*spread,by=y+oy+dy/len*spread;ctx.beginPath();ctx.moveTo(bx,by);ctx.quadraticCurveTo(bx-nx*side*2,by-g.th*.34,bx+nx*side*2,by-g.th*.62);ctx.stroke()}if(i%2===0){ellipse(ctx,x+ox+g.tw*.09,y+oy,g.tw*.07,g.th*.16,'#8b9079');ellipse(ctx,x+ox-g.tw*.08,y+oy+g.th*.04,g.tw*.05,g.th*.11,'#afb097')}}
+ // Layered carved banks: the darker outer cut, pale gravel shelf, then water.
+ pathThrough(ctx,river);ctx.strokeStyle='#416b5d';ctx.lineWidth=g.tw*1.82;ctx.stroke();
+ pathThrough(ctx,river);ctx.strokeStyle='#d8d59b';ctx.lineWidth=g.tw*1.56;ctx.stroke();
+ pathThrough(ctx,river);ctx.strokeStyle='#86b77c';ctx.lineWidth=g.tw*1.36;ctx.stroke();
+ const water=ctx.createLinearGradient(0,river[0][1],0,river[river.length-1][1]);water.addColorStop(0,'#8be0e6');water.addColorStop(.45,'#4fc0d5');water.addColorStop(1,'#268fb9');
+ pathThrough(ctx,river);ctx.strokeStyle=water;ctx.lineWidth=g.tw*1.16;ctx.stroke();
+ // Reeds, rocks, and small foam tongues make each bend feel carved into the land.
+ for(let i=1;i<river.length-1;i++){
+  const prev=river[i-1],next=river[i+1],[x,y]=river[i],dx=next[0]-prev[0],dy=next[1]-prev[1],len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;
+  for(const side of[-1,1] as const){const offset=g.tw*(.68+(i%3)*.045)*side,bx=x+nx*offset,by=y+ny*offset;ctx.strokeStyle=side>0?'#6e905d':'#a1a96b';ctx.lineWidth=Math.max(1,g.tw*.018);for(let r=0;r<2+(i%3);r++){const sway=(r-1)*g.tw*.12;ctx.beginPath();ctx.moveTo(bx+sway,by);ctx.quadraticCurveTo(bx+sway+nx*side*g.tw*.08,by-g.th*.28,bx+sway-nx*side*g.tw*.03,by-g.th*.52);ctx.stroke()}if(i%2===0)ellipse(ctx,bx+nx*g.tw*.1,by+ny*g.tw*.1,g.tw*(.06+(i%3)*.015),g.th*.13,'#788675');}
+  if(i%2===1){const fx=x+nx*g.tw*.45,fy=y+ny*g.tw*.45;ctx.strokeStyle='#eff7d6aa';ctx.lineWidth=Math.max(1.2,g.tw*.022);ctx.beginPath();ctx.moveTo(fx-(dx/len)*g.tw*.18,fy-(dy/len)*g.tw*.18);ctx.quadraticCurveTo(fx+nx*g.tw*.08,fy+ny*g.tw*.08,fx+(dx/len)*g.tw*.2,fy+(dy/len)*g.tw*.2);ctx.stroke()}
+ }
  ctx.restore();
 
  const mountain=(wx:number,wy:number,scale:number,back=false)=>{const[x,y]=screen(wx,wy),w=g.tw*1.35*scale,h=g.th*5.1*scale;
@@ -69,7 +75,14 @@ export function drawTerrainBase(ctx:CanvasRenderingContext2D,g:TerrainGeometry,s
 
 export function drawTerrainMotion(ctx:CanvasRenderingContext2D,g:TerrainGeometry,screen:ScreenProjector,tick:number){
  const river=riverPoints(screen);ctx.save();clipToLand(ctx,screen);
- for(let i=1;i<river.length-1;i+=2){const prev=river[i-1],next=river[i+1],[x,y]=river[i],dx=next[0]-prev[0],dy=next[1]-prev[1],len=Math.hypot(dx,dy)||1,tx=dx/len,ty=dy/len,nx=-ty,ny=tx,w=g.tw*(.16+(i%3)*.035),drift=Math.sin(tick*.025+i)*g.th*.08;ctx.strokeStyle=i%4===1?'#c5e5d860':'#8ec7c052';ctx.lineWidth=Math.max(1,g.tw*.016);for(let ripple=-1;ripple<=1;ripple++){const off=ripple*g.th*.22+drift;ctx.beginPath();ctx.moveTo(x-tx*w+nx*off,y-ty*w+ny*off);ctx.quadraticCurveTo(x+nx*(off+g.th*.08),y+ny*(off+g.th*.08),x+tx*w+nx*off,y+ty*w+ny*off);ctx.stroke()}}
+ // Twelve fixed stream markers keep the animation cheap while following every bend.
+ for(let n=0;n<12;n++){
+  const raw=(n*.37+tick*.012)%1,along=raw*(river.length-1),segment=Math.min(river.length-2,Math.floor(along)),u=along-segment,a=river[segment],b=river[segment+1],x=a[0]+(b[0]-a[0])*u,y=a[1]+(b[1]-a[1])*u,dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy)||1,tx=dx/len,ty=dy/len,nx=-ty,ny=tx;
+  const span=g.tw*(.16+(n%3)*.035),wave=Math.sin(tick*.025+n*.8)*g.th*.06,off=((n%3)-1)*g.th*.18+wave;
+  ctx.strokeStyle=n%4===0?'#eef8e5bf':'#bce9df9c';ctx.lineWidth=Math.max(1,g.tw*.018);ctx.beginPath();ctx.moveTo(x-tx*span+nx*off,y-ty*span+ny*off);ctx.quadraticCurveTo(x+nx*(off+g.th*.1),y+ny*(off+g.th*.1),x+tx*span+nx*off,y+ty*span+ny*off);ctx.stroke();
+ }
+ // A pair of short counter-curves at bends reads as a gentle eddy, not noise.
+ for(let i=1;i<river.length-1;i+=3){const a=river[i-1],b=river[i],c=river[i+1],dx=c[0]-a[0],dy=c[1]-a[1],len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;ctx.strokeStyle='#d5f0dc72';ctx.lineWidth=Math.max(1,g.tw*.014);for(const side of[-1,1] as const){const x=b[0]+nx*side*g.tw*.28,y=b[1]+ny*side*g.tw*.28;ctx.beginPath();ctx.arc(x,y,g.tw*(.12+(i%2)*.025),Math.atan2(dy,dx)+side*.6,Math.atan2(dy,dx)+side*2.15);ctx.stroke()}}
  ctx.restore();
 }
 

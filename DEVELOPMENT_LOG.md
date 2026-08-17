@@ -32,7 +32,7 @@
 ## 2026-08-17 — 챕터 인구·생선 사료망·전 건물 업그레이드
 
 ### 게임 규칙
-- 최대 고양이를 CH.1/2/3/4의 4/8/12/16으로 고정하고 회관 레벨의 중복 인원 가산을 제거했다.
+- 최대 고양이는 CH.1/2/3/4 기본치 4/8/12/16에 각 회관 LV.1/2/3 보너스 +4/+6/+8을 합산한다. 이 규칙은 초기 “회관 중복 가산 제거” 기록을 대체한다.
 - 동쪽 강변 전용 `강변 낚시터`가 생선 4를 생산하고, 사료 공장이 생선 3을 사료 3과 부산물 1로 가공한다.
 - 캣닢은 사료 투입에서 제거하고 찻집의 행복·생활 수익 기호품으로만 사용한다.
 - 도로·전선·수도관을 제외한 모든 건물을 LV.3까지 업그레이드할 수 있다. 코인·필수 연결·가용 노동 1명을 검사하며 노동은 즉시 복귀한다.
@@ -57,3 +57,32 @@
 - `qa-art/integrated-economy-3d-desktop.png`
 - `qa-art/integrated-economy-3d-mobile-320.png`
 - `qa-art/integrated-economy-2d-mobile-390.png`
+
+## 2026-08-17 — 회관 MAX 재확장·전 건물 레벨 외형·흐르는 강
+
+### 규칙 교정
+- 챕터 기본 MAX 4/8/12/16에 각 회관 보너스를 합산한다.
+- 회관 LV.1/2/3은 한 채당 MAX +4/+6/+8이며 업그레이드마다 +2가 즉시 반영된다.
+- 여러 회관은 각각 합산되고, 건설·업그레이드·철거·저장 migration에서 즉시 재계산한다.
+
+### 2D·3D 표현
+- 15종 실제 건물 모두 LV.1/2/3 전용 실루엣과 기능 설비를 갖는다. 공통 배지만 바꾸는 fallback을 제거했다.
+- 밭·농장은 관개·온실·사일로, 발전·정수는 탱크·냉각·처리동, 생산 시설은 크레인·컨베이어·덕트·작업동, 생활 시설은 테라스·조명·캣워크로 확장된다.
+- 고양이 귀 지붕, 발자국 표식, 고양이 문, 안전 난간과 캣워크를 건물 자체 구조에 통합했다.
+- 2D 강에 다층 곡선 강둑, 자갈 선반, 갈대·돌·foam과 접선 방향 흐름 streak·bend eddy를 추가했다.
+- 3D 사각 물 타일을 `RIVER_PATH` 기반 연속 ribbon으로 교체하고 단일 shader의 UV band가 하류로 흐르도록 했다.
+- `prefers-reduced-motion`에서는 2D·3D 흐름을 완전히 고정한다.
+
+### 검증
+- `npm test`: 87/87, `npm run typecheck`, `npm run build`, `git diff --check` 통과
+- CH.2 + 회관 LV.1/2/3 동시 배치: `8 + 4 + 6 + 8 = MAX 26`
+- 15종 전체 LV.1/2/3 2D·3D 렌더 비교 시트 확인
+- reduced-motion: 2D·3D 시간차 프레임 차이 0
+- active motion: 2D 변화 bbox `(1116,559)–(1410,669)`, 3D 변화 bbox `(752,496)–(1329,1000)`
+
+### 증거
+- `qa-art/facilities-level-comparison-2d.png`
+- `qa-art/facilities-level-comparison-3d.png`
+- `qa-art/facilities-all-lv1-2d.png` / `facilities-all-lv1-3d.png`
+- `qa-art/facilities-all-lv2-2d.png` / `facilities-all-lv2-3d.png`
+- `qa-art/facilities-all-lv3-2d.png` / `facilities-all-lv3-3d.png`
