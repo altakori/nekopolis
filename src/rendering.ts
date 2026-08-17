@@ -1,4 +1,5 @@
-import type{WarningKind}from'./simulation';
+import type{Cell,BuildingKind,WarningKind}from'./simulation';
+import{footprint}from'./simulation';
 
 export type RenderQuality='high'|'balanced'|'low';
 export type WarningBadge={kind:WarningKind;symbol:string;color:string};
@@ -38,6 +39,43 @@ export function cardinalRoadTopology(cell:number,roads:ReadonlySet<number>,width
 export function roadFacingDoor(road:number,edgeCell:number,width:number){
  const roadX=road%width,roadY=Math.floor(road/width),cellX=edgeCell%width,cellY=Math.floor(edgeCell/width);
  return{x:(roadX+cellX)/2,y:(roadY+cellY)/2};
+}
+
+export type SharedDriveway={anchor:number;kind:BuildingKind;road:number;roadCell:number;roadCenter:{x:number;y:number};edgeCell:number;door:{x:number;y:number};doorGrid:{x:number;y:number}};
+
+/**
+ * Selects one short, cardinal driveway for each facility.  The door is on the
+ * actual footprint perimeter (not at the footprint centre), so this is safe to
+ * share between the canvas and Three renderer.  Ties are resolved by road cell
+ * then edge cell, making save/replay renders deterministic.
+ */
+export function sharedDriveways(grid:ReadonlyArray<Cell>,width:number,height:number):SharedDriveway[]{
+ const roads=new Set<number>();
+ for(let i=0;i<grid.length;i++)if(grid[i]?.kind==='road')roads.add(i);
+ const result:SharedDriveway[]=[];
+ for(let anchor=0;anchor<grid.length;anchor++){
+  const cell=grid[anchor];
+  if(!cell||cell.anchor!==anchor||cell.kind==='road'||cell.kind==='wire'||cell.kind==='pipe')continue;
+  const size=footprint(cell.kind),baseX=anchor%width,baseY=Math.floor(anchor/width),cells=Array.from({length:size*size},(_,n)=>baseX+n%size+(baseY+Math.floor(n/size))*width),center={x:baseX+(size-1)/2,y:baseY+(size-1)/2};
+  const candidates:{road:number;edgeCell:number;door:{x:number;y:number}}[]=[];
+  for(const edgeCell of cells){
+   const ex=edgeCell%width,ey=Math.floor(edgeCell/width);
+   for(const road of[ex>0?edgeCell-1:-1,ex+1<width?edgeCell+1:-1,ey>0?edgeCell-width:-1,ey+1<height?edgeCell+width:-1]){
+    if(road<0||!roads.has(road))continue;
+    const rx=road%width,ry=Math.floor(road/width);
+    const door={x:rx<ex?ex-.5:rx>ex?ex+.5:ex,y:ry<ey?ey-.5:ry>ey?ey+.5:ey};
+    candidates.push({road,edgeCell,door});
+   }
+  }
+  if(!candidates.length)continue;
+  candidates.sort((a,b)=>{
+   const distance=(candidate:{road:number})=>Math.abs(candidate.road%width-center.x)+Math.abs(Math.floor(candidate.road/width)-center.y);
+   return distance(a)-distance(b)||a.road-b.road||a.edgeCell-b.edgeCell;
+  });
+  const chosen=candidates[0],roadCenter={x:chosen.road%width,y:Math.floor(chosen.road/width)};
+  result.push({anchor,kind:cell.kind,road:chosen.road,roadCell:chosen.road,roadCenter,edgeCell:chosen.edgeCell,door:chosen.door,doorGrid:{x:chosen.edgeCell%width,y:Math.floor(chosen.edgeCell/width)}});
+ }
+ return result;
 }
 
 export function routeWithDwell(raw:number,dwell:number){

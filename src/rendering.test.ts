@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {canvasDpr,cardinalRoadTopology,facilityWarningBadges,nextRenderQuality,renderBudget,roadFacingDoor,routeWithDwell,targetFrameMs} from './rendering';
+import {canvasDpr,cardinalRoadTopology,facilityWarningBadges,nextRenderQuality,renderBudget,roadFacingDoor,routeWithDwell,sharedDriveways,targetFrameMs} from './rendering';
 
 describe('render budget',()=>{
  it('caps high-density mobile canvases at DPR 1.5',()=>{
@@ -47,6 +47,15 @@ describe('render budget',()=>{
  it('places a facility door on the boundary between its road and edge cell',()=>{
   expect(roadFacingDoor(25,26,24)).toEqual({x:1.5,y:1});
   expect(roadFacingDoor(49,25,24)).toEqual({x:1,y:1.5});
+ });
+ it('returns one deterministic cardinal driveway on the exact footprint boundary',()=>{
+  const width=8,height=6,grid=Array(width*height).fill(null) as any[];grid[18]={kind:'field',age:0,anchor:18,level:1};grid[17]={kind:'road',age:0,anchor:17,level:1};grid[26]={kind:'road',age:0,anchor:26,level:1};
+  const first=sharedDriveways(grid,width,height),second=sharedDriveways(grid,width,height);expect(first).toEqual(second);expect(first[0]).toMatchObject({anchor:18,kind:'field',road:17,roadCenter:{x:1,y:2},door:{x:1.5,y:2},doorGrid:{x:2,y:2}});
+ });
+ it('uses a 2x2 edge cell and rejects diagonal-only roads',()=>{
+  const width=8,height=6,grid=Array(width*height).fill(null) as any[];grid[27]={kind:'hall',age:0,anchor:27,level:1};grid[19]={kind:'road',age:0,anchor:19,level:1};
+  expect(sharedDriveways(grid,width,height)[0]).toMatchObject({road:19,door:{x:3,y:2.5},doorGrid:{x:3,y:3}});
+  const diagonal=Array(width*height).fill(null) as any[];diagonal[18]={kind:'hall',age:0,anchor:18,level:1};diagonal[9]={kind:'road',age:0,anchor:9,level:1};expect(sharedDriveways(diagonal,width,height)).toEqual([]);
  });
  it('holds at both doors and moves continuously in both directions',()=>{
   expect(routeWithDwell(.1,.2)).toEqual({progress:0,moving:false});

@@ -94,3 +94,17 @@
 - 3D 원뿔 귀·원통 발바닥 장식을 제거하고 투명 CanvasTexture 일러스트 데칼을 건물 정면에 부착했다.
 - 2D도 같은 `cat-decals.ts` 얼굴·발바닥 일러스트를 Canvas에 그려 두 화면의 고양이 그림 언어를 통일했다.
 - `npm test` 87/87, typecheck, production build, diff check와 `qa-art/hall-lv3-roof-river-decal-final.png` 실제 렌더를 확인했다.
+
+## 2026-08-17 — 32×24 사분면 개척·쉬운 튜토리얼·연속 3D 지형
+
+- 지도 시스템을 32×24와 q1/q2/q3/q4 순차 개척으로 확장했다. 시작 q1에는 강·산·스타터 시설만 배치한다.
+- q2 550, q3 850, q4 1200 냥코인이며 앞 동네부터 차례로 열어야 한다.
+- 취수·정수 2단계를 `맑은물 펌프장` 하나로 통합하고 기존 정수장은 migration에서 펌프로 변환한다.
+- 튜토리얼은 기반망→사료·물·전기·화장실→정착/지역→캣닢·목재·가구→찻집·광장·배송의 30개 체크포인트다.
+- q2는 기본생활 튜토리얼 완료 보상으로 무료 자동 해금하며, q3·q4는 튜토리얼과 첫 배송 완료 뒤 냥코인으로 연다.
+- 완료 팝업은 새 해금 건물·동네 설명과 다음 목표를 보여주며 backdrop 클릭으로 닫힌다. 공용 `nekopolis-tutorial-seen` key로 2D↔3D 재표시를 막는다.
+- 대각선 도로는 모든 연속 칸의 Manhattan 거리가 1인 계단 경로로 정규화하고 3D preview도 같은 경로를 사용한다.
+- 시설 진입로는 footprint 경계 출입문과 맞닿은 도로를 짧게 연결하며 2D·3D가 같은 geometry를 공유한다. 강 위 코너·T·십자 다리는 연결 방향별 deck과 외곽 난간만 만든다.
+- 3D는 전체 slab·GridHelper·Fog를 제거하고 단일 vertex-color 지형, 열린 지역 중심 카메라, 셀별 식생 clearing, 2D 고양이 NPC sprite를 사용한다.
+- 검증: 83/83 tests, typecheck, production build, q1/q2 2D·3D 데스크톱, 320/390px overflow, MAX/마이그레이션/지역 잠금/도로·유틸리티·생산·노동·업그레이드·배송 회귀 테스트.
+- 증거: `qa-art/quadrant-q1-start-2d.png`, `quadrant-q1-start-3d.png`, `quadrant-q2-unlocked-2d.png`, `quadrant-q2-unlocked-3d.png`.

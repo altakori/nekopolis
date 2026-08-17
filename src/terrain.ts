@@ -2,7 +2,20 @@ import{W,H,RIVER_PATH}from'./simulation';
 
 export type TerrainGeometry={tw:number;th:number};
 export type ScreenProjector=(x:number,y:number)=>readonly[number,number];
+export type DistrictUnlocks=ReadonlyArray<string|number>|ReadonlySet<string|number>;
 export const terrainGridBounds=(columns:number,rows:number)=>({minX:-.5,maxX:columns-.5,minY:-.5,maxY:rows-.5});
+
+// The board opens as four child-friendly quadrants, one frontier at a time.
+const districtForCell=(x:number,y:number)=>Math.min(3,Math.floor(x/16)+Math.floor(y/12)*2);
+const districtPalette=[
+ {name:'첫 동네',base:'#a7d27f',accent:'#d8e99b',detail:'#f4d98b'},
+ {name:'초원 숲',base:'#6fa56d',accent:'#416d52',detail:'#91bc73'},
+ {name:'호수 습지',base:'#78b59b',accent:'#427d74',detail:'#b8d59b'},
+ {name:'바다 해안',base:'#6da9b1',accent:'#397a8a',detail:'#b8e1d5'},
+] as const;
+const districtKeys=['q1','q2','q3','q4'];
+const isOpen=(unlocked:DistrictUnlocks|undefined,id:number)=>{if(!unlocked)return true;const key=districtKeys[id];return unlocked instanceof Set?unlocked.has(id)||unlocked.has(key):Array.from(unlocked as ReadonlyArray<string|number>).some((v:string|number)=>v===id||v===key)};
+const seeded=(x:number,y:number,n=0)=>{const v=Math.sin(x*12.9898+y*78.233+n*37.719)*43758.5453;return v-Math.floor(v)};
 
 const pathThrough=(ctx:CanvasRenderingContext2D,points:readonly(readonly[number,number])[])=>{
  if(points.length<2)return;
@@ -24,12 +37,22 @@ const clipToLand=(ctx:CanvasRenderingContext2D,screen:ScreenProjector)=>{
  ctx.beginPath();ctx.moveTo(top[0],top[1]);ctx.lineTo(right[0],right[1]);ctx.lineTo(bottom[0],bottom[1]);ctx.lineTo(left[0],left[1]);ctx.closePath();ctx.clip();
 };
 
-export function drawTerrainBase(ctx:CanvasRenderingContext2D,g:TerrainGeometry,screen:ScreenProjector,showGrid:boolean){
+export function drawTerrainBase(ctx:CanvasRenderingContext2D,g:TerrainGeometry,screen:ScreenProjector,showGrid:boolean,unlockedDistricts?:DistrictUnlocks){
  const columns=W,rows=H,{minX,maxX,minY,maxY}=terrainGridBounds(columns,rows),top=screen(minX,minY),right=screen(maxX,minY),bottom=screen(maxX,maxY),left=screen(minX,maxY);
  const land=ctx.createLinearGradient(top[0],top[1],bottom[0],bottom[1]);land.addColorStop(0,'#9fc77c');land.addColorStop(.46,'#78ad68');land.addColorStop(1,'#568f60');
  ctx.fillStyle='#47775b';ctx.beginPath();ctx.moveTo(left[0],left[1]);ctx.lineTo(bottom[0],bottom[1]);ctx.lineTo(bottom[0],bottom[1]+g.th*1.35);ctx.lineTo(left[0],left[1]+g.th*1.35);ctx.closePath();ctx.fill();
  ctx.fillStyle=land;ctx.beginPath();ctx.moveTo(top[0],top[1]);ctx.lineTo(right[0],right[1]);ctx.lineTo(bottom[0],bottom[1]);ctx.lineTo(left[0],left[1]);ctx.closePath();ctx.fill();
  ctx.strokeStyle='#eaf6c899';ctx.lineWidth=1.5;ctx.stroke();
+ // Paint six softly tessellated biomes under the roads and facilities. The tiny
+ // deterministic marks give each district a different ecology without a sprite atlas.
+ ctx.save();clipToLand(ctx,screen);for(let y=0;y<rows;y++)for(let x=0;x<columns;x++){const id=districtForCell(x,y),p=districtPalette[id],open=isOpen(unlockedDistricts,id),[px,py]=screen(x,y);ctx.globalAlpha=open ? .18 : .28;ctx.fillStyle=p.base;ctx.beginPath();ctx.moveTo(px,py-g.th*.78);ctx.lineTo(px+g.tw*.46,py);ctx.lineTo(px,py+g.th*.78);ctx.lineTo(px-g.tw*.46,py);ctx.closePath();ctx.fill();if((x+y*3)%4===0){ctx.globalAlpha=open ? .32 : .18;ctx.strokeStyle=p.accent;ctx.lineWidth=Math.max(1,g.tw*.018);ctx.beginPath();ctx.moveTo(px-g.tw*.12,py+g.th*.2);ctx.quadraticCurveTo(px,py-g.th*.08,px+g.tw*.12,py-g.th*.27);ctx.stroke()}}
+ // Meadow blades, forest canopies, wetland pools, and rock flecks are sparse and
+ // seeded so panning/quality changes never make the world pop into new layouts.
+ for(let y=0;y<rows;y++)for(let x=0;x<columns;x++){const id=districtForCell(x,y),p=districtPalette[id],r=seeded(x,y,4),[px,py]=screen(x,y);ctx.globalAlpha=isOpen(unlockedDistricts,id) ? .6 : .22;if(id===1&&r>.42){ellipse(ctx,px-g.tw*.12,py-g.th*.28,g.tw*.16,g.th*.28,p.accent);ellipse(ctx,px+g.tw*.1,py-g.th*.38,g.tw*.14,g.th*.24,p.detail)}else if(id===3&&r>.55){ctx.fillStyle=p.accent;ctx.beginPath();ctx.ellipse(px+g.tw*.12,py-g.th*.12,g.tw*.2,g.th*.08,.2,0,Math.PI*2);ctx.fill()}else if(id===2&&r>.6){ellipse(ctx,px+g.tw*.17,py-g.th*.2,g.tw*.09,g.th*.12,p.detail)}else if((id===0||id===5)&&r>.68){ctx.strokeStyle=p.detail;ctx.lineWidth=Math.max(1,g.tw*.014);ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px-g.tw*.03,py-g.th*.18);ctx.moveTo(px,py);ctx.lineTo(px+g.tw*.06,py-g.th*.12);ctx.stroke()}}
+ // Locked land is not an opaque block: a fogged tint, dotted border, and restrained
+ // padlock glyph preserve the map silhouette while making the purchase target clear.
+ for(let id=0;id<4;id++)if(!isOpen(unlockedDistricts,id)){const x0=(id%2)*16-.5,x1=x0+16,y0=Math.floor(id/2)*12-.5,y1=y0+12,a=screen(x0,y0),b=screen(x1,y0),c=screen(x1,y1),d=screen(x0,y1);ctx.globalAlpha=.92;ctx.fillStyle='#d8f2ef';ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.lineTo(...c);ctx.lineTo(...d);ctx.closePath();ctx.fill();ctx.globalAlpha=.7;ctx.strokeStyle='#f1c27d';ctx.lineWidth=Math.max(1.5,g.tw*.035);ctx.setLineDash([Math.max(4,g.tw*.12),Math.max(4,g.tw*.1)]);ctx.stroke();ctx.setLineDash([]);const m=screen((x0+x1)/2,(y0+y1)/2);ctx.fillStyle='#fff0c7';ctx.font=`700 ${Math.max(10,g.tw*.15)}px sans-serif`;ctx.textAlign='center';ctx.fillText('☁',m[0],m[1])}
+ ctx.restore();
 
  const patches:[[number,number],number,number,string][]=[[[5.2,3.5],2.5,1.15,'#e8d58642'],[[7.4,12.2],3.2,1.25,'#f2c8a13d'],[[15.5,8.1],2.7,1.2,'#74b98444'],[[3.2,9.4],2.15,.9,'#d8e98355'],[[13.2,14.4],3.4,1.1,'#f4df9b38']];
  for(const[[x,y],rx,ry,color]of patches){const[pX,pY]=screen(x,y);ellipse(ctx,pX,pY,g.tw*rx*.5,g.th*ry,color)}
