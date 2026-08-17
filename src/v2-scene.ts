@@ -3,8 +3,8 @@ import {cardinalRoadTopology} from './rendering';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 import {W,H,EXTERNAL_ROAD,dragLine,footprint,footprintCenter,footprintCells,isMountainQuarrySite,isRiverCell,firstContractGuide,utilityNetworkCells,utilitySegmentsAt,type BuildingKind,type State} from './simulation';
 
-const COLORS:Record<BuildingKind,string>={road:'#8f846f',wire:'#f4c84f',pipe:'#66c9ef',field:'#82b85f',farm:'#c69759',plant:'#df735e',intake:'#4ba7c3',purifier:'#69bdbb',quarry:'#a29175',litter:'#78a99b',feed:'#df805f',workshop:'#bd759a',recycler:'#709982',teahouse:'#d77f59',dorm:'#859dc7',hall:'#dab353',plaza:'#ebbd4d'};
-const POWER_KINDS=new Set<BuildingKind>(['plant','intake','purifier','farm','litter','feed','workshop','recycler','teahouse','dorm','hall','plaza']);
+const COLORS:Record<BuildingKind,string>={road:'#8f846f',wire:'#f4c84f',pipe:'#66c9ef',field:'#82b85f',farm:'#c69759',plant:'#df735e',intake:'#4ba7c3',purifier:'#69bdbb',quarry:'#a29175',litter:'#78a99b',feed:'#df805f',fishery:'#4d9caa',workshop:'#bd759a',recycler:'#709982',teahouse:'#d77f59',dorm:'#859dc7',hall:'#dab353',plaza:'#ebbd4d'};
+const POWER_KINDS=new Set<BuildingKind>(['plant','intake','purifier','farm','litter','feed','fishery','workshop','recycler','teahouse','dorm','hall','plaza']);
 const WATER_KINDS=new Set<BuildingKind>(['intake','purifier','field','farm','litter','feed','teahouse','dorm','hall','plaza']);
 const mat=(color:string,rough=.72,metal=.04)=>new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
 const box=(parent:THREE.Object3D,size:[number,number,number],pos:[number,number,number],color:string,rough=.72)=>{const mesh=new THREE.Mesh(new THREE.BoxGeometry(...size),mat(color,rough));mesh.position.set(...pos);mesh.castShadow=mesh.receiveShadow=true;parent.add(mesh);return mesh};
@@ -12,16 +12,22 @@ const cyl=(parent:THREE.Object3D,r:number,h:number,pos:[number,number,number],co
 const cone=(parent:THREE.Object3D,r:number,h:number,pos:[number,number,number],color:string,segments=6)=>{const mesh=new THREE.Mesh(new THREE.ConeGeometry(r,h,segments),mat(color,.88));mesh.position.set(...pos);mesh.castShadow=mesh.receiveShadow=true;parent.add(mesh);return mesh};
 const world=(cell:number)=>new THREE.Vector3(cell%W-(W-1)/2,0,Math.floor(cell/W)-(H-1)/2);
 function roadVisual(parent:THREE.Object3D,topology:ReturnType<typeof cardinalRoadTopology>,bridge:boolean){
- const foundation='#26332f',asphalt='#4d5049',edge='#84755a',mark='#d9bc78';
- box(parent,[.98,.16,.98],[0,.02,0],foundation,.9);box(parent,[.62,.09,.62],[0,.14,0],asphalt,.82);
- const arm=(axis:'x'|'z',sign:number)=>{const horizontal=axis==='x',length=.52,center=sign*.32;box(parent,horizontal?[length,.1,.58]:[.58,.1,length],[horizontal?center:0,.17,horizontal?0:center],asphalt,.78);box(parent,horizontal?[length*.62,.025,.035]:[.035,.025,length*.62],[horizontal?sign*.38:0,.225,horizontal?0:sign*.38],mark,.5)};
+ const foundation='#26332f',asphalt='#50534d',edge='#918166',mark='#d9bc78';
+ // Build a flat union of one centre pad and only the connected arms. Keeping every
+ // piece at the same height removes the raised circular "plug" formerly visible at junctions.
+ box(parent,[.72,.12,.72],[0,.06,0],foundation,.9);box(parent,[.64,.075,.64],[0,.1575,0],asphalt,.82);
+ const arm=(axis:'x'|'z',sign:number)=>{const horizontal=axis==='x',center=sign*.4;box(parent,horizontal?[.48,.12,.72]:[.72,.12,.48],[horizontal?center:0,.06,horizontal?0:center],foundation,.9);box(parent,horizontal?[.5,.075,.64]:[.64,.075,.5],[horizontal?center:0,.1575,horizontal?0:center],asphalt,.82)};
  if(topology.north)arm('z',-1);if(topology.east)arm('x',1);if(topology.south)arm('z',1);if(topology.west)arm('x',-1);
- if(topology.kind==='t-junction'||topology.kind==='cross'){const hub=topology.kind==='cross'?.42:.38;cyl(parent,hub,.065,[0,.225,0],'#596057',16)}
- // Continuous curbs occupy only closed cell edges, so openings remain visually connected.
- if(!topology.north)box(parent,[.96,.07,.045],[0,.235,-.43],edge,.62);
- if(!topology.east)box(parent,[.045,.07,.96],[.43,.235,0],edge,.62);
- if(!topology.south)box(parent,[.96,.07,.045],[0,.235,.43],edge,.62);
- if(!topology.west)box(parent,[.045,.07,.96],[-.43,.235,0],edge,.62);
+ // Lane marks stop before a corner or junction instead of drawing a bright cross through it.
+ const markArm=(axis:'x'|'z',sign:number)=>{const horizontal=axis==='x';box(parent,horizontal?[.22,.018,.032]:[.032,.018,.22],[horizontal?sign*.38:0,.205,horizontal?0:sign*.38],mark,.48)};
+ if(topology.kind==='straight'||topology.kind==='dead-end'){
+  if(topology.north)markArm('z',-1);if(topology.east)markArm('x',1);if(topology.south)markArm('z',1);if(topology.west)markArm('x',-1);
+ }
+ // Curbs occupy closed tile boundaries only; every connected side remains flush.
+ if(!topology.north)box(parent,[.96,.065,.045],[0,.205,-.47],edge,.62);
+ if(!topology.east)box(parent,[.045,.065,.96],[.47,.205,0],edge,.62);
+ if(!topology.south)box(parent,[.96,.065,.045],[0,.205,.47],edge,.62);
+ if(!topology.west)box(parent,[.045,.065,.96],[-.47,.205,0],edge,.62);
  if(bridge){
   const horizontal=Number(topology.east)+Number(topology.west)>=Number(topology.north)+Number(topology.south);
   for(const side of[-1,1] as const){
@@ -48,7 +54,14 @@ function facilityModel(kind:BuildingKind,level:number){
  else if(kind==='intake'){box(g,[1.7,.45,1.5],[0,.23,0],color);for(const x of[-.45,.45])cyl(g,.34,.75,[x,.78,0],'#91d9df');pipeBetween(g,new THREE.Vector3(-.65,0,.65),new THREE.Vector3(.65,0,.65),'#dff8ff',.08,.38)}
  else if(kind==='purifier'){box(g,[1.75,.4,1.55],[0,.2,0],color);for(const x of[-.48,.48])cyl(g,.4,.9,[x,.75,0],'#8fced0');box(g,[.8,.55,.65],[0,.68,-.35],'#d5e4d6')}
  else if(kind==='quarry'){box(g,[1.8,.15,1.65],[0,.075,0],'#665a4b');for(const [x,z,s] of[[-.45,-.25,.42],[.1,.15,.55],[.55,-.1,.35]] as const)cone(g,s,s*.9,[x,s*.45,z],'#b7a27b',5);box(g,[.16,1.15,.16],[-.65,.65,.42],'#e0b548');const boom=box(g,[1.15,.1,.12],[-.1,1.15,.42],'#edc45d');boom.rotation.z=-.12}
- else if(kind==='litter'){box(g,[1.75,1.05,1.55],[0,.53,0],color);for(const x of[-.55,0,.55]){const r=roof(g,.58,1.45,1.25,x===0?'#e6ead9':'#b9d2c5');r.position.x=x}cyl(g,.3,1.55,[.63,.8,-.42],'#ded8be');windowBand(g,1.2,.62,.79)}
+ else if(kind==='litter'){
+  // Compact sorting/washing line: the roof stays well inside the footprint.
+  box(g,[1.72,.88,1.48],[0,.44,0],color);box(g,[1.18,.18,1.08],[0,.94,0],'#4f756d');
+  cyl(g,.28,.62,[-.47,1.12,-.18],'#d8d3b4');cyl(g,.24,.48,[-.47,1.08,-.18],'#8fc5b5');
+  box(g,[.78,.16,.34],[.34,1.08,.18],'#d5b46f');box(g,[.68,.1,.16],[.34,1.19,.18],'#637a70');
+  cyl(g,.14,.58,[.57,1.28,-.38],'#d9e0c9');box(g,[.12,.28,.12],[.57,1.7,-.38],'#7a9f98');
+  box(g,[.28,.22,.42],[-.65,.72,.48],'#a6c5b5');windowBand(g,1.1,.55,.75);
+}
  else if(kind==='feed'){box(g,[1.65,1.1,1.45],[0,.55,0],color);roof(g,1.8,1.55,1.38,'#775047');cyl(g,.27,1.5,[.58,.75,-.38],'#e5b877');windowBand(g,.9,.63,.74)}
  else if(kind==='workshop'){box(g,[1.7,1,1.5],[0,.5,0],color);roof(g,1.85,1.6,1.27,'#745069');box(g,[.24,1.55,.24],[.56,.78,-.4],'#d7aa7d');windowBand(g,1.15,.58,.77)}
  else if(kind==='recycler'){box(g,[1.7,.9,1.5],[0,.45,0],color);box(g,[1.25,.22,1.1],[0,.93,0],'#36554a');for(const x of[-.45,0,.45])cyl(g,.12,.18,[x,1.08,.25],'#e6bd68')}
@@ -58,8 +71,33 @@ function facilityModel(kind:BuildingKind,level:number){
   else if(level===2){box(g,[1.75,2.05,1.5],[0,1.03,0],'#aeb3ae');for(const y of[.52,1.12,1.72]){windowBand(g,1.38,y,.77);box(g,[1.42,.08,.35],[0,y-.18,.92],'#718d84')}box(g,[.85,.18,.65],[.28,2.13,0],'#84a78f')}
   else{box(g,[1.62,3.5,1.42],[0,1.75,0],'#919da0');for(let y=.48;y<3.25;y+=.55){windowBand(g,1.2,y,.73);box(g,[1.25,.06,.32],[0,y-.17,.88],'#67847e')}box(g,[.9,.25,.7],[-.2,3.63,0],'#80a694');for(const x of[-.32,.32]){const p=box(g,[.5,.04,.58],[x,3.85,0],'#2e5e69',.2);p.rotation.x=-.18}}
  }
- else if(kind==='hall'){box(g,[1.72,1.15+level*.2,1.52],[0,.58+level*.1,0],color);roof(g,1.95,1.72,1.53+level*.2,'#705045');box(g,[.5,.78,.45],[0,1.67+level*.2,0],'#e2bd62');cone(g,.18,.32,[0,2.22+level*.2,0],'#f2d27c',6)}
+ else if(kind==='fishery'){
+  // A small river landing: deck, shed, catch handling, and fishing gear.
+  box(g,[1.82,.1,1.72],[0,.05,0],'#72543b');
+  for(const x of[-.72,-.24,.24,.72])cyl(g,.055,.42,[x,.25,.72],'#654936',10);
+  box(g,[.9,.76,.86],[-.22,.48,-.22],'#9b6c46');roof(g,1.08,.98,1.0,'#5c493e');
+  box(g,[.18,.38,.22],[.42,.3,.36],'#c4864e');
+  for(const [x,z] of[[-.58,.35],[-.27,.48],[.1,.45]] as const){const crate=box(g,[.28,.2,.24],[x,.2,z],'#c99557');box(g,[.22,.025,.03],[x,.31,z+.12],'#6b4c38')}
+  for(const x of[-.72,.72]){cyl(g,.07,.82,[x,.46,.62],'#644936',10);box(g,[.12,.06,.32],[x,.86,.47],'#886247')}
+  const net=new THREE.Mesh(new THREE.TorusGeometry(.25,.025,6,14,Math.PI*1.5),mat('#d8c8a1',.86));net.rotation.x=Math.PI/2;net.position.set(.45,.68,.62);g.add(net);
+  for(const x of[-.16,.02,.18]){const fish=box(g,[.18,.045,.07],[x,.34,.68],'#d5a76b',.5);fish.rotation.y=.25;cone(g,.06,.12,[x+.12,.34,.68],'#d5a76b',3).rotation.z=Math.PI/2}
+  box(g,[.62,.05,.05],[.42,1.03,.48],'#d6c39a');
+}
+else if(kind==='hall'){
+  if(level===1){box(g,[1.65,.82,1.45],[0,.41,0],color);roof(g,1.84,1.62,1.08,'#705045');box(g,[.62,.38,.06],[0,.38,.74],'#8b6547');box(g,[.32,.3,.04],[0,.65,.77],'#8ec2c2')}
+  else if(level===2){box(g,[1.48,1.55,1.3],[0,.78,0],color);roof(g,1.7,1.5,1.72,'#705045');box(g,[.95,.12,.34],[0,.92,.86],'#8b6547');for(const x of[-.38,.38])cyl(g,.05,.32,[x,1.15,.9],'#765445',8);box(g,[.34,.62,.08],[0,.43,.68],'#8ec2c2');cyl(g,.16,.04,[0,1.83,.02],'#f6d57b',12)
+  }
+  else{box(g,[1.2,2.1,1.08],[0,1.05,0],color);box(g,[.48,1.18,1.34],[-.68,.59,0],'#c2944f');box(g,[.48,1.18,1.34],[.68,.59,0],'#c2944f');roof(g,1.42,1.3,2.2,'#705045');box(g,[.38,.82,.38],[0,2.45,0],'#c2944f');cone(g,.16,.35,[0,2.98,0],'#f6d57b',6);box(g,[.06,.48,.06],[0,3.18,0],'#e4c77b');box(g,[.72,.05,.05],[0,2.75,.2],'#f2d27c')}
+}
  else if(kind==='plaza'){box(g,[1.65,.18,1.55],[0,.09,0],'#e7c777');cyl(g,.18,1.5,[0,.85,0],color);cone(g,.46,.75,[0,1.65,0],'#f0bd4d',6)}
+  // Shared upgrade language for facilities without bespoke level silhouettes.
+  // Keep it low-profile so hall/dorm remain visually authored and readable.
+  if(level>1 && kind!=='hall' && kind!=='dorm'){
+    const accent=level>=3?'#f6d57b':'#b8e1c3';
+    box(g,[1.32,.045,.045],[0,.98,.77],accent,.35);
+    if(level>=3){box(g,[.32,.12,.24],[.34,1.13,-.18],'#58766d',.4);cyl(g,.055,.28,[.52,1.28,-.18],accent,10)}
+    else{for(const x of[-.42,.42])box(g,[.12,.07,.05],[x,1.05,.79],accent,.3)}
+  }
  g.userData.pickable=true;return g;
 }
 

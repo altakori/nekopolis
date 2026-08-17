@@ -13,9 +13,9 @@
 ## Approach A live view switch (2026-08-17)
 
 - `src/persistence.ts` adds canonical `nekopolis-shared-save` persistence. It migrates either legacy page key, chooses the furthest legacy tick when no canonical save exists, and never replaces a valid canonical save with stale legacy data.
-- `index.html`/`v2.html` now expose synchronous `3D 보기 ↗` / `2D 보기 ↗` page switches. Both pages read/write the same simulation State; renderer camera state remains local to each view. The former manual `2D 가져오기` action was removed.
+- `index.html`/`v2.html` expose synchronous `3D로 전환 / 입체 도시 체험 ↗` / `← 2D로 돌아가기` page switches. Both pages read/write the same simulation State; renderer camera state remains local to each view. The former manual `2D 가져오기` action was removed.
 - Added five persistence regression tests covering 2D-only, 3D-only, canonical precedence, dual-legacy selection, and State round-trip.
-- Verification on `feat/live-view-switch`: `npm test` 80/80, `npm run typecheck`, `npm run build`, desktop 2D→3D→2D State round-trip, 390px mobile switch/overflow, and 2D·3D road topology fixture QA.
+- Verification on `feat/live-view-switch`: `npm test` 87/87, `npm run typecheck`, `npm run build`, desktop 2D→3D→2D State round-trip, 320px/390px mobile switch/overflow, and integrated 2D·3D road/building fixture QA.
 
 ## 현재 확장
 
