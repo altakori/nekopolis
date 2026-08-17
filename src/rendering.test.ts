@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {canvasDpr,facilityWarningBadges,nextRenderQuality,renderBudget,roadFacingDoor,routeWithDwell,targetFrameMs} from './rendering';
+import {canvasDpr,cardinalRoadTopology,facilityWarningBadges,nextRenderQuality,renderBudget,roadFacingDoor,routeWithDwell,targetFrameMs} from './rendering';
 
 describe('render budget',()=>{
  it('caps high-density mobile canvases at DPR 1.5',()=>{
@@ -36,6 +36,13 @@ describe('render budget',()=>{
    {kind:'road',symbol:'🛣!',color:'#756554'},
    {kind:'input',symbol:'📦!',color:'#8f596c'},
   ]);
+ });
+ it('classifies cardinal road masks for every intersection shape',()=>{
+  const roads=new Set([2,5,6,9,10,11,14,17]);
+  expect(cardinalRoadTopology(5,roads,4,5).kind).toBe('corner');
+  expect(cardinalRoadTopology(6,roads,4,5)).toMatchObject({mask:13,degree:3,kind:'t-junction'});
+  expect(cardinalRoadTopology(10,roads,4,5)).toMatchObject({mask:15,degree:4,kind:'cross'});
+  expect(cardinalRoadTopology(0,new Set([0]),4,5,true)).toMatchObject({mask:8,degree:1,kind:'dead-end'});
  });
  it('places a facility door on the boundary between its road and edge cell',()=>{
   expect(roadFacingDoor(25,26,24)).toEqual({x:1.5,y:1});

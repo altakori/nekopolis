@@ -24,6 +24,17 @@ export function renderBudget(quality:RenderQuality,population:number){
  return{...budget,cats:Math.min(Math.max(0,Math.floor(population)),budget.cats)};
 }
 
+export type RoadTopologyKind='isolated'|'dead-end'|'straight'|'corner'|'t-junction'|'cross';
+export type RoadTopology={mask:number;degree:number;kind:RoadTopologyKind;north:boolean;east:boolean;south:boolean;west:boolean};
+
+/** Cardinal road mask: N=1, E=2, S=4, W=8. Pure and shared by both renderers. */
+export function cardinalRoadTopology(cell:number,roads:ReadonlySet<number>,width:number,height:number,externalWest=false):RoadTopology{
+ const x=cell%width,y=Math.floor(cell/width),north=y>0&&roads.has(cell-width),east=x+1<width&&roads.has(cell+1),south=y+1<height&&roads.has(cell+width),west=x>0&&roads.has(cell-1)||(externalWest&&x===0);
+ const mask=(north?1:0)|(east?2:0)|(south?4:0)|(west?8:0),degree=Number(north)+Number(east)+Number(south)+Number(west);
+ const kind:RoadTopologyKind=degree===0?'isolated':degree===1?'dead-end':degree===2?((north&&south)||(east&&west)?'straight':'corner'):degree===3?'t-junction':'cross';
+ return{mask,degree,kind,north,east,south,west};
+}
+
 export function roadFacingDoor(road:number,edgeCell:number,width:number){
  const roadX=road%width,roadY=Math.floor(road/width),cellX=edgeCell%width,cellY=Math.floor(edgeCell/width);
  return{x:(roadX+cellX)/2,y:(roadY+cellY)/2};

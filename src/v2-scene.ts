@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {cardinalRoadTopology} from './rendering';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 import {W,H,EXTERNAL_ROAD,dragLine,footprint,footprintCenter,footprintCells,isMountainQuarrySite,isRiverCell,firstContractGuide,utilityNetworkCells,utilitySegmentsAt,type BuildingKind,type State} from './simulation';
 
@@ -10,6 +11,28 @@ const box=(parent:THREE.Object3D,size:[number,number,number],pos:[number,number,
 const cyl=(parent:THREE.Object3D,r:number,h:number,pos:[number,number,number],color:string,segments=16)=>{const mesh=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,segments),mat(color,.56,.12));mesh.position.set(...pos);mesh.castShadow=mesh.receiveShadow=true;parent.add(mesh);return mesh};
 const cone=(parent:THREE.Object3D,r:number,h:number,pos:[number,number,number],color:string,segments=6)=>{const mesh=new THREE.Mesh(new THREE.ConeGeometry(r,h,segments),mat(color,.88));mesh.position.set(...pos);mesh.castShadow=mesh.receiveShadow=true;parent.add(mesh);return mesh};
 const world=(cell:number)=>new THREE.Vector3(cell%W-(W-1)/2,0,Math.floor(cell/W)-(H-1)/2);
+function roadVisual(parent:THREE.Object3D,topology:ReturnType<typeof cardinalRoadTopology>,bridge:boolean){
+ const foundation='#26332f',asphalt='#4d5049',edge='#84755a',mark='#d9bc78';
+ box(parent,[.98,.16,.98],[0,.02,0],foundation,.9);box(parent,[.62,.09,.62],[0,.14,0],asphalt,.82);
+ const arm=(axis:'x'|'z',sign:number)=>{const horizontal=axis==='x',length=.52,center=sign*.32;box(parent,horizontal?[length,.1,.58]:[.58,.1,length],[horizontal?center:0,.17,horizontal?0:center],asphalt,.78);box(parent,horizontal?[length*.62,.025,.035]:[.035,.025,length*.62],[horizontal?sign*.38:0,.225,horizontal?0:sign*.38],mark,.5)};
+ if(topology.north)arm('z',-1);if(topology.east)arm('x',1);if(topology.south)arm('z',1);if(topology.west)arm('x',-1);
+ if(topology.kind==='t-junction'||topology.kind==='cross'){const hub=topology.kind==='cross'?.42:.38;cyl(parent,hub,.065,[0,.225,0],'#596057',16)}
+ // Continuous curbs occupy only closed cell edges, so openings remain visually connected.
+ if(!topology.north)box(parent,[.96,.07,.045],[0,.235,-.43],edge,.62);
+ if(!topology.east)box(parent,[.045,.07,.96],[.43,.235,0],edge,.62);
+ if(!topology.south)box(parent,[.96,.07,.045],[0,.235,.43],edge,.62);
+ if(!topology.west)box(parent,[.045,.07,.96],[-.43,.235,0],edge,.62);
+ if(bridge){
+  const horizontal=Number(topology.east)+Number(topology.west)>=Number(topology.north)+Number(topology.south);
+  for(const side of[-1,1] as const){
+   const x=horizontal?0:side*.43,z=horizontal?side*.43:0;
+   box(parent,horizontal?[.94,.04,.04]:[.04,.04,.94],[x,.43,z],'#9c8058',.65);
+   for(const along of[-.34,.34])box(parent,[.045,.28,.045],[horizontal?along:x,.31,horizontal?z:along],'#8b694c',.68);
+   box(parent,[.09,.42,.09],[horizontal?0:side*.34,-.17,horizontal?side*.34:0],'#59483c',.85);
+  }
+ }
+}
+
 const centerWorld=(anchor:number,kind:BuildingKind)=>{const c=footprintCenter(anchor,footprint(kind));return new THREE.Vector3(c.x-(W-1)/2,0,c.y-(H-1)/2)};
 const dispose=(root:THREE.Object3D)=>root.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();const materials=Array.isArray(o.material)?o.material:[o.material];materials.forEach(m=>m.dispose())}});
 
@@ -59,7 +82,7 @@ export class V2Scene{
  cellFromPointer(clientX:number,clientY:number){const rect=this.canvas.getBoundingClientRect();this.pointer.set((clientX-rect.left)/rect.width*2-1,-((clientY-rect.top)/rect.height)*2+1);this.raycaster.setFromCamera(this.pointer,this.camera);const modelHit=this.raycaster.intersectObjects(this.pickables,true)[0];if(modelHit){let node:THREE.Object3D|null=modelHit.object;while(node&&typeof node.userData.cell!=='number')node=node.parent;if(typeof node?.userData.cell==='number')return node.userData.cell}const hit=this.raycaster.intersectObject(this.groundHit)[0];if(!hit)return null;const x=Math.floor(hit.point.x+W/2),y=Math.floor(hit.point.z+H/2);return x>=0&&x<W&&y>=0&&y<H?y*W+x:null}
  screenForCell(cell:number){const p=world(cell).project(this.camera),rect=this.canvas.getBoundingClientRect();return{x:rect.left+(p.x+1)*rect.width/2,y:rect.top+(1-p.y)*rect.height/2}}
  sync(s:State,selected:number|null){dispose(this.city);this.scene.remove(this.city);this.city=new THREE.Group();this.pickables=[];this.scene.add(this.city);
-  const roadCells=s.grid.map((c,i)=>c?.kind==='road'?i:-1).filter(i=>i>=0);for(const i of roadCells){const p=world(i),road=box(this.city,[.96,.11,.96],[p.x,.04,p.z],COLORS.road);road.userData={cell:i,pickable:true};if(i===EXTERNAL_ROAD)box(this.city,[1.5,.1,.55],[p.x-.95,.05,p.z],COLORS.road)}
+  const roadCells=s.grid.map((c,i)=>c?.kind==='road'?i:-1).filter(i=>i>=0),roadSet=new Set(roadCells);for(const i of roadCells){const p=world(i),topology=cardinalRoadTopology(i,roadSet,W,H,i===EXTERNAL_ROAD),road=new THREE.Group();road.position.set(p.x,0,p.z);road.userData={cell:i,pickable:true};roadVisual(road,topology,isRiverCell(i));this.city.add(road)}
   for(const kind of['wire','pipe'] as const){const segments=s.utilities[kind],activeCells=utilityNetworkCells(s.grid,segments,kind==='wire'?['plant']:['intake']),owners=new Map<number,number>();for(const segment of segments)for(const cell of dragLine(segment.a,segment.b))owners.set(cell,(owners.get(cell)||0)+1);for(const segment of segments){const path=dragLine(segment.a,segment.b),active=path.some(cell=>activeCells.has(cell)),color=active?COLORS[kind]:kind==='wire'?'#776f46':'#416775',a=world(segment.a),b=world(segment.b);pipeBetween(this.city,a,b,color,kind==='wire'?.058:.09,kind==='wire'?.42:.18);for(const endpoint of[segment.a,segment.b]){const p=world(endpoint);if(kind==='wire'){cyl(this.city,.09,.72,[p.x,.36,p.z],color,10);box(this.city,[.28,.05,.12],[p.x,.69,p.z],color)}else{cyl(this.city,.12,.18,[p.x,.11,p.z],color,12);const valve=new THREE.Mesh(new THREE.TorusGeometry(.13,.025,7,14),mat(color,.4,.25));valve.rotation.x=Math.PI/2;valve.position.set(p.x,.25,p.z);this.city.add(valve)}}}for(const[cell,count]of owners)if(count>1){const p=world(cell),color=activeCells.has(cell)?COLORS[kind]:'#62716f';if(kind==='wire'){cyl(this.city,.115,.78,[p.x,.39,p.z],color,12);const halo=new THREE.Mesh(new THREE.TorusGeometry(.19,.025,8,18),mat(color,.35,.2));halo.rotation.x=Math.PI/2;halo.position.set(p.x,.79,p.z);this.city.add(halo)}else{cyl(this.city,.15,.22,[p.x,.12,p.z],color,12);const valve=new THREE.Mesh(new THREE.TorusGeometry(.18,.03,8,18),mat(color,.35,.25));valve.rotation.x=Math.PI/2;valve.position.set(p.x,.26,p.z);this.city.add(valve)}}}
   for(let i=0;i<s.grid.length;i++){const cell=s.grid[i];if(!cell||cell.anchor!==i||cell.kind==='road')continue;const p=centerWorld(i,cell.kind),g=facilityModel(cell.kind,cell.level);g.position.copy(p);g.userData={cell:i,kind:cell.kind,pickable:true};g.traverse(o=>o.userData.cell=i);this.pickables.push(g);const diag=s.diagnostics[i];if(diag?.online){const ring=new THREE.Mesh(new THREE.RingGeometry(.72,.84,28),new THREE.MeshBasicMaterial({color:COLORS[cell.kind],side:THREE.DoubleSide,transparent:true,opacity:.65}));ring.rotation.x=-Math.PI/2;ring.position.y=.04;g.add(ring)}else if(diag){const beacon=cone(g,.14,.34,[.68,2.2,.62],'#ee756b',5);beacon.userData.warning=true}this.city.add(g)}
   if(selected!==null){const cell=s.grid[selected];if(cell){const anchor=cell.anchor,p=centerWorld(anchor,cell.kind),size=footprint(cell.kind);this.selectedRing=new THREE.Mesh(new THREE.RingGeometry(size*.66,size*.76,4),new THREE.MeshBasicMaterial({color:'#ffe49a',side:THREE.DoubleSide}));this.selectedRing.rotation.set(-Math.PI/2,0,Math.PI/4);this.selectedRing.position.set(p.x,.07,p.z);this.city.add(this.selectedRing)}else{const kind=utilitySegmentsAt(s,'wire',selected).length?'wire':utilitySegmentsAt(s,'pipe',selected).length?'pipe':null;if(kind){const p=world(selected),color=kind==='wire'?'#ffe169':'#82ddff';this.selectedRing=new THREE.Mesh(new THREE.RingGeometry(.22,.36,4),new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide,transparent:true,opacity:.95}));this.selectedRing.rotation.set(-Math.PI/2,0,Math.PI/4);this.selectedRing.position.set(p.x,kind==='wire'?.78:.06,p.z);this.city.add(this.selectedRing)}}}

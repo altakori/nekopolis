@@ -5,10 +5,17 @@
 ## 저장소
 
 - Repository: `https://github.com/altakori/nekopolis-foundry`
-- Branch: `feat/shared-audio`
-- Base HEAD: `52870feb65fb7c6b7b0f2e23422e5f89cd8c6eec`
+- Branch: `feat/live-view-switch`
+- Base: `feat/shared-audio` at `3c39930884919fb8693abfd1bb7dfe5c3780782e`
 - `main` 미병합
 - 승인된 2D 이야기·위생·주거 확장 위에서 정적 3D 비교본을 완전 플레이 가능한 별도 3D surface로 확장
+
+## Approach A live view switch (2026-08-17)
+
+- `src/persistence.ts` adds canonical `nekopolis-shared-save` persistence. It migrates either legacy page key, chooses the furthest legacy tick when no canonical save exists, and never replaces a valid canonical save with stale legacy data.
+- `index.html`/`v2.html` now expose synchronous `3D 보기 ↗` / `2D 보기 ↗` page switches. Both pages read/write the same simulation State; renderer camera state remains local to each view. The former manual `2D 가져오기` action was removed.
+- Added five persistence regression tests covering 2D-only, 3D-only, canonical precedence, dual-legacy selection, and State round-trip.
+- Verification on `feat/live-view-switch`: `npm test` 80/80, `npm run typecheck`, `npm run build`, desktop 2D→3D→2D State round-trip, 390px mobile switch/overflow, and 2D·3D road topology fixture QA.
 
 ## 현재 확장
 
@@ -18,10 +25,11 @@
 - `v2.html`은 `simulation.ts`를 2D와 함께 사용하는 완전 플레이 가능한 Three.js 버전이다. 건설·utility·계약·생산·이주·업그레이드·작업 정책·배송·저장 기능을 제공하며 `npm run dev:v2`로 5172 포트에서 실행한다. 5174는 다른 게임용으로 보존한다.
 - 전선·수도관은 같은 종류 선로가 중간에서 교차해도 접속되고, 공급원에 연결된 활성망과 고립망을 2D·3D에서 구분한다. 선택한 칸에서 가장 최근 선분 하나를 철거해 고유 edge 기준 35%를 회수하고, 겹쳐 연장할 때는 새 edge만 과금한다.
 - 3D는 시설 위 utility drag와 시설 tap 선택을 함께 지원하고, resource-only tick에는 전체 scene geometry를 재생성하지 않는다. pointer picking은 Raycaster를 재사용하며 canvas 키보드 camera 조작을 제공한다.
+- Road/intersection polish: `src/rendering.ts` now owns the pure cardinal road mask classifier, covered by focused rendering tests. Both 2D and 3D use it; 3D roads now have topology-aware decks/hubs/curbs and river bridge support cues without per-frame geometry recreation.
 - 2D mobile shell의 강제 660px 최소 높이를 제거해 320×568 short viewport에서도 문서 scroll 없이 board와 dock을 한 화면에 유지한다.
 - 회관·숙소의 모든 업그레이드는 가용 노동 1명을 조건으로 검사하지만 순간 완료 후 작업 고양이를 즉시 반환한다. paused 상태에서도 `laborUsed`와 가용 노동력이 변하지 않는다.
 - 2.5D·3D는 `audio.ts`의 공통 Web Audio 엔진을 사용한다. CC0 마을 BGM과 7종 상호작용 효과음, 첫 입력 unlock, 탭 비활성 시 감쇠, `전체 음향 → 효과음만 → 음소거` 저장 설정을 제공한다.
-- 74/74 tests, typecheck, 2D+v2 production build, audio decode/loop/cue/mobile QA, 2D/3D 선로 철거·중복/단일칸 차단·교차 접속·회관/숙소 노동 1·즉시 반환·desktop/mobile/WebGL·pan performance QA를 통과했다.
+- 80/80 tests, typecheck, 2D+v2 production build, audio decode/loop/cue/mobile QA, shared-save 왕복 전환, 도로 topology, 2D/3D 선로 철거·중복/단일칸 차단·교차 접속·회관/숙소 노동 1·즉시 반환·desktop/mobile/WebGL·pan performance QA를 통과했다.
 
 ## 사용자 교정
 

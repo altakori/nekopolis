@@ -18,6 +18,7 @@
 
 - 24×18 Canvas 2.5D 아이소메트릭 도시와 강·초원·식생·절벽 지형
 - 마우스/터치 드래그 도로 시공과 타일을 관통하는 직선 전선·수도관 segment 시공
+- 2D·3D가 같은 4방향 도로 topology 판정을 공유하며 막다른 길·코너·T자·십자 교차로를 구분한다. 3D는 어두운 기초, 연결형 노면, 외곽 연석, 중앙선, 교차로 hub와 강 위 교각·평행 난간을 입체적으로 표현한다.
 - 2×2 다중 타일 시설, 건설·선택 중에만 보이는 footprint guide, 4칸 hover·선택 강조
 - 지붕·좌우 벽면·창문·문·굴뚝·탱크를 갖춘 기능별 volumetric 건물과 top/side 두께를 갖춘 도로
 - 강 위 road cell을 난간·교각·plank가 있는 raised bridge로 자동 표현
@@ -51,6 +52,7 @@
 - 시민 수에 따른 사료 소비와 균형·식량·재료 노동 우선순위
 - 지도 중심 command bar, 모바일에서 접고 펼칠 수 있는 임무 overlay, 하단 건설 dock, 선택 시설 context inspector
 - localStorage 자동 저장·불러오기와 이전 저장 형식 마이그레이션
+- 2D·3D 페이지가 `nekopolis-shared-save` 하나를 함께 사용하는 live State와 기존 `nekopolis-save`/`nekopolis-v2-save` 저장 자동 migration
 - 2.5D·3D 공통 CC0 배경 음악과 건설·선로·선택·성공·오류·철거·토글 효과음, 첫 입력 후 재생되는 Web Audio, `전체 음향 → 효과음만 → 음소거` 저장 설정
 - 데스크톱/모바일 반응형 UI
 - Grok 제작 오리지널 SVG 타이틀 장식, 고양이 기술자 마스코트, 찻집·재활용 공방·배송 비콘 reference sheet
@@ -64,7 +66,7 @@ npm run dev
 
 브라우저에 표시된 로컬 주소를 열어 플레이합니다.
 
-완전 플레이 가능한 WebGL 3D 버전은 별도 포트에서 실행합니다. 2D와 같은 시뮬레이션 규칙을 사용하지만 저장 슬롯은 분리되어 있으며, 필요하면 상단의 `2D 가져오기`로 현재 2D 진행을 복사할 수 있습니다.
+페이지 상단의 `3D 보기 ↗`와 `2D 보기 ↗`는 클릭 직전 현재 State를 동기 저장한 뒤 다른 페이지로 이동합니다. 두 화면은 `nekopolis-shared-save`를 읽고 쓰므로 grid·utility·resources·stage·tick·paused·speed·work policy가 그대로 이어지며, 카메라 위치 같은 renderer-only 상태는 화면별로 독립입니다. 기존 `nekopolis-save`와 `nekopolis-v2-save`만 남아 있는 브라우저도 처음 진입할 때 canonical save로 자동 migration합니다. canonical save가 있으면 legacy 데이터가 더 최신 tick이어도 덮어쓰지 않습니다.
 
 ```bash
 npm run dev:v2
