@@ -17,8 +17,8 @@ export const COST:Record<BuildingKind,Partial<Record<ResourceKey,number>>>={road
 export const LABEL:Record<BuildingKind,string>={road:'도로',wire:'전선',pipe:'수도관',field:'캣닢 밭',farm:'혼합 농장',plant:'바이오 발전소',intake:'강변 취수장',purifier:'정수장',quarry:'모래 원석 채석장',litter:'고양이 모래 공장',feed:'사료 공장',workshop:'가구 공방',recycler:'재활용 공방',teahouse:'캣닢 찻집',dorm:'고양이 숙소',hall:'고양이 회관',plaza:'캣타워 광장'};
 export const DESC:Record<BuildingKind,string>={road:'바깥 도시와 작업·물류 시설을 잇는 이동망',wire:'시설 아래로도 연결되는 직선 송전망',pipe:'시설 아래로도 연결되는 직선 취수·정수관',field:'물 1·노동 1로 캣닢 3 생산',farm:'전력 1·물 2·노동 2로 캣닢과 목재 생산',plant:'24 전력 용량을 송전망에 공급',intake:'강변에서 전력 2로 원수 18 취수',purifier:'전력 4·노동 1로 원수 12를 정수',quarry:'북쪽 산지에서 노동 2로 흡수성 광물 원석 3 채굴',litter:'원석 3을 공정수로 세척·건조해 위생 모래 3과 부산물 1 생산',feed:'캣닢 3·노동 3을 사료 2와 부산물로 가공',workshop:'목재 3·노동 3을 가구 1과 부산물로 가공',recycler:'부산물 3·노동 2를 목재 2와 코인으로 회수',teahouse:'캣닢 2·노동 1로 행복과 생활 수익을 생산',dorm:'LV.1 주택 → LV.2 빌라 → LV.3 아파트 · 실제 고양이 +2/+4/+7',hall:'도시의 최대 고양이 수를 관리·확장하는 행정 회관',plaza:'전력·물·도로·노동 1이 연결되면 행복도 상승'};
 export const footprint=(k:BuildingKind)=>['plant','intake','purifier','quarry','litter','feed','workshop','recycler','teahouse','dorm','hall','plaza'].includes(k)?2:1;
-export const HALL_UPGRADES={2:{coins:120,power:4,water:2,labor:4,capacity:4},3:{coins:220,power:8,water:4,labor:8,capacity:4}} as const;
-export const DORM_UPGRADES={2:{coins:90,power:2,water:1,labor:1,residents:2},3:{coins:160,power:3,water:2,labor:2,residents:3}} as const;
+export const HALL_UPGRADES={2:{coins:120,power:4,water:2,labor:1,capacity:4},3:{coins:220,power:8,water:4,labor:1,capacity:4}} as const;
+export const DORM_UPGRADES={2:{coins:90,power:2,water:1,labor:1,residents:2},3:{coins:160,power:3,water:2,labor:1,residents:3}} as const;
 export const dormResidents=(level:number)=>level>=3?7:level===2?4:2;
 export const idx=(x:number,y:number)=>y*W+x;
 export function neighbors(i:number){const x=i%W,y=Math.floor(i/W);return[[x-1,y],[x+1,y],[x,y-1],[x,y+1]].filter(([a,b])=>a>=0&&a<W&&b>=0&&b<H).map(([a,b])=>idx(a,b));}

@@ -75,8 +75,9 @@ const put = (kind, x, y, size = 1) => {
   const hallButton = inspector.locator('.upgrade-panel button');
   if (await hallButton.isDisabled()) throw new Error(`Hall upgrade disabled: ${(await inspector.innerText()).replace(/\s+/g, ' ')}`);
   await hallButton.click();
-  await page.waitForTimeout(120);
+  await page.waitForTimeout(150);
   const hallAfter = await page.evaluate(() => JSON.parse(localStorage.getItem('nekopolis-save')));
+  const audioAfterUpgrades = await page.evaluate(() => window.nekopolisAudioDebug());
   if (hallAfter.laborUsed !== hallBefore.laborUsed) throw new Error('Hall upgrade reserved labor instead of returning it');
 
   await page.getByRole('button', { name: '×1', exact: true }).click();
@@ -101,6 +102,7 @@ const put = (kind, x, y, size = 1) => {
     laborDelta: beforeSave.resources.labor - afterUpgrade.resources.labor,
     laborUsedDelta: beforeSave.laborUsed - afterUpgrade.laborUsed,
     hallLaborUsedDelta: hallBefore.laborUsed - hallAfter.laborUsed,
+    audioAfterUpgrades,
     errors,
   };
   console.log(JSON.stringify(result, null, 2));
@@ -119,6 +121,7 @@ const put = (kind, x, y, size = 1) => {
     && hallAfter.grid[hall]?.level === 2
     && result.laborUsedDelta === 0
     && result.hallLaborUsedDelta === 0
+    && result.audioAfterUpgrades.cueCounts.success >= 2
     && errors.length === 0;
   if (!ok) throw new Error('Dorm resident upgrade browser assertions failed');
   await browser.close();

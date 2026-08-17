@@ -51,6 +51,7 @@
 - 시민 수에 따른 사료 소비와 균형·식량·재료 노동 우선순위
 - 지도 중심 command bar, 모바일에서 접고 펼칠 수 있는 임무 overlay, 하단 건설 dock, 선택 시설 context inspector
 - localStorage 자동 저장·불러오기와 이전 저장 형식 마이그레이션
+- 2.5D·3D 공통 CC0 배경 음악과 건설·선로·선택·성공·오류·철거·토글 효과음, 첫 입력 후 재생되는 Web Audio, `전체 음향 → 효과음만 → 음소거` 저장 설정
 - 데스크톱/모바일 반응형 UI
 - Grok 제작 오리지널 SVG 타이틀 장식, 고양이 기술자 마스코트, 찻집·재활용 공방·배송 비콘 reference sheet
 
@@ -115,9 +116,9 @@ npm run dev:v2
 - 황혼 배송: 사료 3 + 가구 1 → 90₩, 배송 후 12 tick cooldown
 - 숙소 LV.1/2/3: 실제 고양이 +2/+4/+7; 전력·정수·바깥 도시 연속 도로 연결 시 회관의 최대치 안에서 교대마다 이주
 - 고양이 회관 LV.1: 최대 고양이 +4
-- 회관 LV.2: 120₩ + 전력 여유 4 + 물 여유 2 + 노동 4 → 최대 +4
-- 회관 LV.3: 220₩ + 전력 여유 8 + 물 여유 4 + 노동 8 → 최대 +4
-- 회관·숙소 증축 노동력은 작업 가능 여부만 검사하며, 순간 완료 직후 전원 복귀해 `laborUsed`를 늘리지 않음
+- 회관 LV.2: 120₩ + 전력 여유 4 + 물 여유 2 + 노동 1 → 최대 +4
+- 회관 LV.3: 220₩ + 전력 여유 8 + 물 여유 4 + 노동 1 → 최대 +4
+- 회관·숙소의 모든 증축 단계는 노동 1명만 작업 가능 여부로 검사하며, 순간 완료 직후 즉시 복귀해 `laborUsed`와 가용 노동력을 바꾸지 않음
 - 같은 종류의 전선·수도관은 끝점뿐 아니라 중간 교차점에서도 자동 접속; 활성망은 밝게, 공급원에서 고립된 선분은 어둡게 표시. 기존 선로를 일부 따라 연장할 때는 새 edge만 과금. 수도관은 방향 없는 공용망으로, 연결된 정수장이 같은 component 전체에 정수를 공급
 - 시민 사료 소비: 생산 사이클마다 `ceil(인구 ÷ 4)`
 - 시민 위생 모래 소비: 생산 사이클마다 `ceil(인구 ÷ 6)`; 부족하면 행복도 하락
@@ -129,11 +130,14 @@ npm run dev:v2
 npm test
 npm run typecheck
 npm run build
+NEKOPOLIS_URL=http://127.0.0.1:5173 node qa-art/audio-qa.cjs
 ```
 
 브라우저 QA는 `NEKOPOLIS_URL`로 대상 서버를, `NEKOPOLIS_BROWSER_PATH`로 Chromium 계열 실행 파일을 선택할 수 있습니다. 실행 파일 override가 없으면 Windows의 표준 Chrome 경로가 실제 존재할 때만 사용하고, 그 외 환경에서는 Playwright 기본 브라우저로 fallback합니다.
 
-현재 자동 테스트는 기존 건설·생산·utility·progression·저장·배송 계약에 더해 선분-시설 타일 관통 연결, 전선·수도관 중간 교차 접속, 공급원 연결 선로 판별, 단일칸·완전 중복 선분 차단, 겹친 연장 선로의 새 edge 과금, 선분별 고유 edge 기준 35% 환급, 숙소·회관 증축 노동 즉시 반환, 숙소 증축 비용·실제 주민 증가와 회관 전용 최대치, paused 구 저장의 hall 기반 max·인구·노동 즉시 정규화, 20×14→24×18 저장 좌표 migration, 저장 소비 없는 진단 재계산, DPR 상한, adaptive render quality와 frame budget, 인구 기반 노동력, 노동 사용/가용 분리, max 초과 주민의 노동 배정 전 조정과 전원 근무 중 offline 숙소 퇴거 보류, 빈·미연결 숙소의 가짜 이주·노동 차단, 원료 부족 시설의 노동 미점유, 동일 시설 round-robin, 회관의 가용 노동 검사, current-shift 노동 사용량의 안전한 저장 migration, road-facing door midpoint와 양방향 이동·대기 continuity 등 73개 상호작용을 검증합니다.
+현재 자동 테스트는 기존 건설·생산·utility·progression·저장·배송 계약에 더해 선분-시설 타일 관통 연결, 전선·수도관 중간 교차 접속, 공급원 연결 선로 판별, 단일칸·완전 중복 선분 차단, 겹친 연장 선로의 새 edge 과금, 선분별 고유 edge 기준 35% 환급, 회관·숙소 전 단계 노동 1·즉시 반환, 숙소 증축 비용·실제 주민 증가와 회관 전용 최대치, paused 구 저장의 hall 기반 max·인구·노동 즉시 정규화, 20×14→24×18 저장 좌표 migration, 저장 소비 없는 진단 재계산, DPR 상한, adaptive render quality와 frame budget, 인구 기반 노동력, 노동 사용/가용 분리, max 초과 주민의 노동 배정 전 조정과 전원 근무 중 offline 숙소 퇴거 보류, 빈·미연결 숙소의 가짜 이주·노동 차단, 원료 부족 시설의 노동 미점유, 동일 시설 round-robin, 회관의 가용 노동 검사, current-shift 노동 사용량의 안전한 저장 migration, road-facing door midpoint와 양방향 이동·대기 continuity 등 74개 상호작용을 검증합니다. 별도 audio QA는 autoplay guard, BGM loop, MP3/OGG 8개 decode, 두 화면의 실제 cue, 3단계 설정 공유, 모바일 overflow와 console/page/HTTP 오류를 검증합니다.
+
+음원 출처와 CC0 조건은 `public/audio/CREDITS.md`와 `public/audio/KENNEY_LICENSE.txt`에 기록했습니다.
 
 ## 배포
 

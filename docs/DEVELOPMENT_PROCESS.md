@@ -563,3 +563,20 @@ Reviewer 피드백 이후 paused/imported 저장도 자원을 소비하거나 ti
 - 2D 320×568 short viewport: horizontal/vertical scroll 0, board 195px, dock bottom 568px
 - 3D utility stress(전선 17선·수도관 20선): 60.33 FPS, 최대 frame gap 17.1ms, overflow 0, 오류 0
 - 노후 QA의 4174 고정 의존을 5173 기본값과 `NEKOPOLIS_URL` override로 교체했다. 브라우저는 `NEKOPOLIS_BROWSER_PATH` override, 존재하는 Windows 표준 Chrome, Playwright 기본 브라우저 순으로 선택해 로컬 재현성과 Linux/macOS/CI portability를 함께 보존한다.
+
+## 2026-08-17 · 2.5D/3D 공통 음향과 증축 노동 1명 규칙
+
+사용자 요청에 따라 저작권 상태가 불명확한 임시 음원을 만들지 않고 원 출처에서 재배포 가능한 CC0 음원을 선택했다. BGM은 OpenGameArt의 Guy G. Gamerson `Happy Town`, 효과음은 Kenney 공식 `Interface Sounds` pack을 사용하며 URL·원본 파일명·라이선스와 SHA-256을 `public/audio/CREDITS.md`에 보존한다.
+
+`src/audio.ts`는 두 surface가 공유하는 단일 Web Audio 엔진이다. 첫 pointer/keyboard 입력에서만 AudioContext를 생성·resume하고 MP3 BGM과 OGG 효과음 7개를 decode한다. BGM은 AudioBufferSource loop로 재생하며 탭이 숨겨지면 master gain을 낮춘다. 효과음은 선택, 건설, 전선·수도관, 성공/증축/저장, 오류, 철거, 토글로 구분하고 짧은 cooldown으로 연속 pointer event의 중첩을 제한한다. 헤더 버튼은 `전체 음향 → 효과음만 → 음소거`를 순환하며 `nekopolis-audio-settings`에 저장된다. `engineFailed`와 `musicFailed`를 분리해 BGM fetch/decode 실패는 음악만 중단하고 이미 decode된 SFX는 계속 재생한다. 개별 효과음 fetch/decode 실패도 다른 buffer를 막지 않는다.
+
+추가 사용자 교정으로 회관 LV.2/3과 숙소 LV.2/3의 증축 노동 요구량을 모두 정확히 1명으로 통일했다. 노동은 승인 가능 여부만 검사하고 `resources.labor`나 `laborUsed`를 차감하지 않으므로 각 증축 직후 바로 가용 상태다.
+
+검증 결과:
+
+- `npm test -- --run`: 74/74 통과; 네 증축 단계 노동 `[1,1,1,1]`, 가용 0일 때 차단, LV.1→2→3 연속 증축에서 `laborUsed`·가용 노동 불변
+- typecheck와 2D+v2 production build 통과
+- audio QA: 첫 입력 전 context `uninitialized`, 입력 후 `running`, BGM loop 시작, 8/8 buffer decode, 3단계 설정과 두 화면 공유 통과. BGM invalid-decode 주입에서는 `musicFailed=true`, `failed=false`, 7개 SFX buffer와 실제 cue 재생 유지
+- 2.5D 실제 cue: select/build/utility/error/demolish/toggle 모두 1회 이상; 3D 실제 cue: select 10, build 3, utility 4, success 1, error 2, demolish 2, toggle 3
+- 320×568 2.5D와 390×844 3D에서 음향 버튼 표시, header/문서 overflow 0
+- audio asset HTTP, decode, console, page 오류 0; 기존 bridge/dorm/living-city/playable-v2/desktop·mobile pan QA 재통과

@@ -5,8 +5,8 @@
 ## 저장소
 
 - Repository: `https://github.com/altakori/nekopolis-foundry`
-- Branch: `fix/v2-utility-labor-polish`
-- Base HEAD: `c0eded907abc0f58dbd22c06c926f237d0f27b09`
+- Branch: `feat/shared-audio`
+- Base HEAD: `52870feb65fb7c6b7b0f2e23422e5f89cd8c6eec`
 - `main` 미병합
 - 승인된 2D 이야기·위생·주거 확장 위에서 정적 3D 비교본을 완전 플레이 가능한 별도 3D surface로 확장
 
@@ -19,8 +19,9 @@
 - 전선·수도관은 같은 종류 선로가 중간에서 교차해도 접속되고, 공급원에 연결된 활성망과 고립망을 2D·3D에서 구분한다. 선택한 칸에서 가장 최근 선분 하나를 철거해 고유 edge 기준 35%를 회수하고, 겹쳐 연장할 때는 새 edge만 과금한다.
 - 3D는 시설 위 utility drag와 시설 tap 선택을 함께 지원하고, resource-only tick에는 전체 scene geometry를 재생성하지 않는다. pointer picking은 Raycaster를 재사용하며 canvas 키보드 camera 조작을 제공한다.
 - 2D mobile shell의 강제 660px 최소 높이를 제거해 320×568 short viewport에서도 문서 scroll 없이 board와 dock을 한 화면에 유지한다.
-- 회관·숙소 업그레이드는 가용 노동력을 조건으로 검사하지만 순간 완료 후 작업 고양이를 즉시 반환한다. paused 상태에서도 `laborUsed`가 증가하지 않는다.
-- 73/73 tests, typecheck, 2D+v2 production build, 2D/3D 선로 철거·중복/단일칸 차단·교차 접속·회관/숙소 노동 즉시 반환·desktop/mobile/WebGL·pan performance QA를 통과했다.
+- 회관·숙소의 모든 업그레이드는 가용 노동 1명을 조건으로 검사하지만 순간 완료 후 작업 고양이를 즉시 반환한다. paused 상태에서도 `laborUsed`와 가용 노동력이 변하지 않는다.
+- 2.5D·3D는 `audio.ts`의 공통 Web Audio 엔진을 사용한다. CC0 마을 BGM과 7종 상호작용 효과음, 첫 입력 unlock, 탭 비활성 시 감쇠, `전체 음향 → 효과음만 → 음소거` 저장 설정을 제공한다.
+- 74/74 tests, typecheck, 2D+v2 production build, audio decode/loop/cue/mobile QA, 2D/3D 선로 철거·중복/단일칸 차단·교차 접속·회관/숙소 노동 1·즉시 반환·desktop/mobile/WebGL·pan performance QA를 통과했다.
 
 ## 사용자 교정
 
@@ -140,6 +141,8 @@ CPU 4× mobile touch pan QA (390×844, DPR 3 device):
 Commit 대상:
 
 - `qa-art/dorm-upgrade-qa.cjs`
+- `qa-art/audio-qa.cjs`
+- `qa-art/playable-v2-qa.cjs`
 - `qa-art/pan-performance-qa.cjs`
 - `qa-art/mobile-pan-performance-qa.cjs`
 
