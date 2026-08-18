@@ -87,6 +87,16 @@
 - `qa-art/facilities-all-lv2-2d.png` / `facilities-all-lv2-3d.png`
 - `qa-art/facilities-all-lv3-2d.png` / `facilities-all-lv3-3d.png`
 
+## 2026-08-18 — 드래그 고스트·서비스 반경·지도 우선 모바일 UI
+
+- 건물 선택 시 전기·물망과 가까운 유효 후보에 ghost를 만들고 데스크톱·모바일에서 drag한 뒤 ✓/✕로 확정·취소한다.
+- 확정 전에는 냥코인과 상태를 바꾸지 않으며, 잘못된 위치는 빨간 footprint와 비활성 ✓로 표시한다.
+- 전선·물관은 건물 footprint와 상하좌우 1칸 서비스 반경에 닿으면 연결된다. 2D·3D 모두 반투명 halo를 표시한다.
+- 3D 모바일은 한 손 pan, 두 손 pinch zoom·twist rotate·vertical pitch를 사용하며 ghost drag 중 카메라 controls를 잠근다.
+- 모바일은 자원 HUD를 숨기고 왼쪽 임무·오른쪽 건설 side rail을 기본 닫힘으로 제공한다. 세로 첫 진입에는 가로 전체화면 권장 모달을 한 번 표시한다.
+- 검증: 85/85 tests, typecheck, production build, diff check. 844×390 CDP에서 2D·3D ghost/✓✕/edge toggle 존재, dock 기본 닫힘, overflow 0.
+- QA 프로세스: 기존 main Vite PID 13108/5173은 재사용·보존. 임시 Vite PID 35368/5172와 Chrome PID 24532/CDP 9225를 종료했고, 잔존 테스트 Vite PID 8028·6940·31600도 명령행 확인 후 종료했다. 5172·61233·61236·9225 LISTEN 해제 확인. RAM 12.67GB 시작, 최종 12.95GB.
+
 ## 2026-08-17 — LV.3 회관 지붕·현실형 3D 강·공통 고양이 데칼
 
 - 회관 LV.3 좌우 지붕을 개별 맞배지붕으로 분리하고 중앙 타워는 낮은 4면 지붕으로 교체했다.

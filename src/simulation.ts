@@ -62,7 +62,7 @@ export function utilityConnected(grid:Cell[],segments:UtilitySegment[],sources:B
  for(const sharing of owners.values())for(let a=0;a<sharing.length;a++)for(let b=a+1;b<sharing.length;b++){graph[sharing[a]].add(sharing[b]);graph[sharing[b]].add(sharing[a])}
  const active=new Set<number>(),queue:number[]=[];segments.forEach((s,i)=>{if(touchesKinds(grid,s.a,sources)||touchesKinds(grid,s.b,sources)||paths[i].some(v=>Boolean(grid[v]&&sources.includes(grid[v]!.kind)))){active.add(i);queue.push(i)}});
  while(queue.length)for(const next of graph[queue.shift()!])if(!active.has(next)){active.add(next);queue.push(next)}
- const served=new Set<number>(),nodes=new Set<number>();for(const i of active){const s=segments[i];nodes.add(s.a);nodes.add(s.b);for(const v of paths[i])if(grid[v])served.add(v)}for(const i of nodes){served.add(i);for(const n of neighbors(i))if(grid[n])served.add(n)}return served;
+ const served=new Set<number>(),nodes=new Set<number>();for(const i of active){const s=segments[i];nodes.add(s.a);nodes.add(s.b);for(const v of paths[i])served.add(v)}for(const i of nodes){served.add(i);for(const n of neighbors(i))if(grid[n])served.add(n)}return served;
 }
 export function utilityNetworkCells(grid:Cell[],segments:UtilitySegment[],sources:BuildingKind[]){
  const paths=segments.map(s=>dragLine(s.a,s.b)),graph=segments.map(()=>new Set<number>()),owners=new Map<number,number[]>();
@@ -71,7 +71,14 @@ export function utilityNetworkCells(grid:Cell[],segments:UtilitySegment[],source
  const cells=new Set<number>();for(const i of active)for(const cell of paths[i])cells.add(cell);return cells;
 }
 export function roadConnected(grid:Cell[]){const served=new Set<number>(),q:number[]=[];if(grid[EXTERNAL_ROAD]?.kind!=='road')return served;served.add(EXTERNAL_ROAD);q.push(EXTERNAL_ROAD);while(q.length){const i=q.shift()!;for(const n of neighbors(i))if(!served.has(n)&&grid[n]?.kind==='road'){served.add(n);q.push(n)}}for(const i of[...served])for(const n of neighbors(i))if(grid[n]?.kind!=='road')served.add(n);return served;}
-export function facilityServed(net:Set<number>,anchor:number,kind:BuildingKind){return footprintCells(anchor,footprint(kind)).some(i=>net.has(i));}
+export const UTILITY_SERVICE_RADIUS=1;
+export function utilityServiceCells(net:Set<number>,radius=UTILITY_SERVICE_RADIUS){
+ const served=new Set(net);if(radius<=0)return served;
+ for(const cell of net){const x=cell%W,y=Math.floor(cell/W);for(let distance=1;distance<=radius;distance++)for(const [dx,dy] of [[-distance,0],[distance,0],[0,-distance],[0,distance]]){const nx=x+dx,ny=y+dy;if(nx>=0&&nx<W&&ny>=0&&ny<H)served.add(idx(nx,ny));}}
+ return served;
+}
+export function facilityServiceAreaCells(anchor:number,kind:BuildingKind){const area=new Set(footprintCells(anchor,footprint(kind)));for(const cell of [...area])for(const n of neighbors(cell))area.add(n);return [...area];}
+export function facilityServed(net:Set<number>,anchor:number,kind:BuildingKind){return facilityServiceAreaCells(anchor,kind).some(i=>net.has(i));}
 export function facilityLineLinked(net:Set<number>,anchor:number,kind:BuildingKind){return facilityServed(net,anchor,kind);}
 export function build(s:State,k:BuildingKind,i:number){const issue=buildIssue(s,k,i);if(issue)return;const n=structuredClone(s);for(const v of footprintCells(i,footprint(k)))n.grid[v]={kind:k,age:0,anchor:i,level:1};for(const[r,v]of Object.entries(COST[k]))n.resources[r as ResourceKey]-=v!;if(k==='hall')n.resources.capacity=cityCapacity(n.grid,n.stage);n.log=[`${LABEL[k]} 건설 완료.`,...n.log].slice(0,8);return n;}
 export function linearBuildIssue(s:State,k:BuildingKind,path:number[]){const normalized=normalizedPath(k,path);if(!['road','wire','pipe'].includes(k)||!normalized.length)return'선형 시설 경로가 필요합니다.';if(k!=='road'&&(normalized.length<2||normalized[0]===normalized[normalized.length-1]))return'시작점에서 다른 칸까지 드래그하세요.';if(!unlockedKinds(s.stage).includes(k))return'아직 해금되지 않은 시설입니다.';if(normalized.some(i=>i<0||i>=W*H))return'지도 경계 안쪽으로 시공하세요.';if(normalized.some(i=>!districtForCell(i)||!isDistrictUnlocked(s,districtForCell(i)!)))return'먼저 해당 지구를 해금하세요.';if(k==='road'&&normalized.some(i=>s.grid[i]&&s.grid[i]!.kind!=='road'))return'도로는 다른 시설을 관통할 수 없습니다.';const cost=effectiveLineBuildCost(s,k,normalized);if(k!=='road'&&!cost)return`같은 ${LABEL[k]} 경로가 이미 설치되어 있습니다.`;if(s.resources.coins<cost)return`건설 자금이 ${cost}₩ 필요합니다.`;return'';}
@@ -118,6 +125,26 @@ const anchorEntries=(s:State)=>s.grid.map((c,i)=>[c,i]as const).filter(([c,i])=>
 const needPower=(k:BuildingKind)=>!['road','wire','pipe','plant','field','quarry'].includes(k);
 const needWater=(k:BuildingKind)=>['field','farm','litter','feed','teahouse','dorm','hall','plaza'].includes(k);
 const needRoad=(k:BuildingKind)=>!['wire','pipe','plant','intake','purifier'].includes(k);
+/** Stable placement hints: utility distance first, grid index as tie-breaker. */
+export function suggestedBuildingAnchors(s:State,k:BuildingKind,limit=3){
+ const size=footprint(k),network=utilityServiceCells(new Set([
+  ...(needPower(k)?utilityNetworkCells(s.grid,s.utilities.wire,['plant']):[]),
+  ...(needWater(k)?utilityNetworkCells(s.grid,s.utilities.pipe,['intake']):[]),
+ ]));
+ const candidates:number[]=[];
+ for(let anchor=0;anchor<s.grid.length;anchor++){
+  const cells=footprintCells(anchor,size);
+  if(cells.length!==size*size||cells.some(i=>s.grid[i]))continue;
+  if(cells.some(i=>!districtForCell(i)||!isDistrictUnlocked(s,districtForCell(i)!)))continue;
+  if(!unlockedKinds(s.stage).includes(k))continue;
+  if((k==='intake'||k==='fishery')&&!isEastRiverbankSite(anchor))continue;
+  if(k==='quarry'&&!isMountainQuarrySite(anchor))continue;
+  candidates.push(anchor);
+ }
+ const distance=(anchor:number)=>{if(!network.size)return 0;return Math.min(...footprintCells(anchor,size).map(cell=>{const x=cell%W,y=Math.floor(cell/W);return Math.min(...[...network].map(n=>Math.abs(x-n%W)+Math.abs(y-Math.floor(n/W))))}));};
+ return candidates.sort((a,b)=>distance(a)-distance(b)||a-b).slice(0,Math.max(0,Math.floor(limit)));
+}
+export function suggestedBuildingAnchor(s:State,k:BuildingKind){return suggestedBuildingAnchors(s,k,1)[0];}
 const workers:Partial<Record<BuildingKind,number>>={fishery:2,field:1,farm:2,intake:0,purifier:1,quarry:2,litter:2,feed:3,workshop:3,recycler:2,teahouse:1,hall:1,plaza:1};
 const powerUse:Partial<Record<BuildingKind,number>>={fishery:1,litter:3,feed:4,workshop:5,recycler:3,teahouse:1,dorm:2,hall:3,plaza:2,farm:1};
 const workOrder:Record<WorkPolicy,BuildingKind[]>={balanced:['fishery','field','farm','quarry','litter','feed','workshop','recycler','teahouse','dorm','hall','plaza'],food:['fishery','feed','field','farm','litter','quarry','teahouse','dorm','hall','workshop','recycler','plaza'],materials:['fishery','quarry','litter','farm','workshop','recycler','field','feed','teahouse','dorm','hall','plaza']};
