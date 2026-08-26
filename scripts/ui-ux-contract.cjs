@@ -91,6 +91,10 @@ function attachRuntimeEvidence(page, report, label) {
     attachRuntimeEvidence(desktop, report, 'desktop');
     await desktop.goto(`${BASE}/`, { waitUntil: 'networkidle' });
     await desktop.locator('.dynamic-layer').waitFor({ state: 'visible' });
+    const liveText = await desktop.locator('body').innerText();
+    invariant(!/공방|재활용|목재|가구|부산물|재료 우선/.test(liveText), 'desktop-2d: retired production controls leaked into live UI');
+    const twoDPolicies = await desktop.locator('.work-policy button').allTextContents();
+    invariant(JSON.stringify(twoDPolicies) === JSON.stringify(['균형', '식량 우선']), `desktop-2d: unexpected work policies ${JSON.stringify(twoDPolicies)}`);
 
     const twoD = await layout(desktop, '2d', ['.view-switch', '.map-controls button', '.mission-toggle']);
     requireLayout('desktop-2d', twoD, 0.45);
@@ -107,6 +111,10 @@ function attachRuntimeEvidence(page, report, label) {
     await desktop.waitForLoadState('networkidle');
     invariant(desktop.url().includes('v2.html'), 'real 2D→3D switch did not navigate to v2.html');
     await desktop.locator('canvas').waitFor({ state: 'visible' });
+    const live3DText = await desktop.locator('body').innerText();
+    invariant(!/공방|재활용|목재|가구|부산물|재료 우선/.test(live3DText), 'desktop-3d: retired production controls leaked into live UI');
+    const threeDPolicies = await desktop.locator('.policy button').allTextContents();
+    invariant(JSON.stringify(threeDPolicies) === JSON.stringify(['균형', '식량 우선']), `desktop-3d: unexpected work policies ${JSON.stringify(threeDPolicies)}`);
     const threeD = await layout(desktop, '3d', ['[data-action="switch-2d"]', '[data-action="mission"]', '[data-action="build"]']);
     requireLayout('desktop-3d', threeD, 0.55);
     invariant(threeD.mission === twoD.mission, `mission drift between 2D and 3D: ${twoD.mission} / ${threeD.mission}`);

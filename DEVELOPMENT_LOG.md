@@ -118,3 +118,16 @@
 - 3D는 전체 slab·GridHelper·Fog를 제거하고 단일 vertex-color 지형, 열린 지역 중심 카메라, 셀별 식생 clearing, 2D 고양이 NPC sprite를 사용한다.
 - 검증: 83/83 tests, typecheck, production build, q1/q2 2D·3D 데스크톱, 320/390px overflow, MAX/마이그레이션/지역 잠금/도로·유틸리티·생산·노동·업그레이드·배송 회귀 테스트.
 - 증거: `qa-art/quadrant-q1-start-2d.png`, `quadrant-q1-start-3d.png`, `quadrant-q2-unlocked-2d.png`, `quadrant-q2-unlocked-3d.png`.
+
+## 2026-08-26 — production-loop simplification
+
+### Current contract
+- Removed workshop/recycler from live building kinds, unlocks, tool docks, diagnostics, 2D/3D render branches, and interaction routes.
+- Farm is catnip-only; live resources and policies no longer expose wood, furniture, scrap, or materials priority.
+- Preserved fish→feed, mineral→litter, catnip→teahouse, and courier feed+litter chains.
+- Migration still accepts legacy purifier/grid utility forms and retired workshop/recycler records, drops retired full footprints and retired inventories, and preserves supported progression, utilities, population, coins, and live resources.
+
+### Verification
+- `npm test`: 86/86 passed
+- `npm run typecheck`: passed
+- Added retired-footprint/new-construction and canonical shared-save stability coverage.
