@@ -36,6 +36,18 @@ export function cardinalRoadTopology(cell:number,roads:ReadonlySet<number>,width
  return{mask,degree,kind,north,east,south,west};
 }
 
+export type SidewalkSlab={x:number;z:number;width:number;depth:number};
+
+/** Local road-tile slabs. Inner edges start outside the .64-wide asphalt. */
+export function sidewalkSlabs(topology:RoadTopology):SidewalkSlab[]{
+ const slabs:SidewalkSlab[]=[{x:0,z:-.405,width:.94,depth:.13},{x:.405,z:0,width:.13,depth:.94},{x:0,z:.405,width:.94,depth:.13},{x:-.405,z:0,width:.13,depth:.94}];
+ if(topology.north)slabs.push({x:-.405,z:-.5,width:.13,depth:1},{x:.405,z:-.5,width:.13,depth:1});
+ if(topology.east)slabs.push({x:.5,z:-.405,width:1,depth:.13},{x:.5,z:.405,width:1,depth:.13});
+ if(topology.south)slabs.push({x:-.405,z:.5,width:.13,depth:1},{x:.405,z:.5,width:.13,depth:1});
+ if(topology.west)slabs.push({x:-.5,z:-.405,width:1,depth:.13},{x:-.5,z:.405,width:1,depth:.13});
+ return slabs;
+}
+
 export function roadFacingDoor(road:number,edgeCell:number,width:number){
  const roadX=road%width,roadY=Math.floor(road/width),cellX=edgeCell%width,cellY=Math.floor(edgeCell/width);
  return{x:(roadX+cellX)/2,y:(roadY+cellY)/2};
