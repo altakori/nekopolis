@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {canvasDpr,cardinalRoadTopology,facilityWarningBadges,nextRenderQuality,renderBudget,roadFacingDoor,routeWithDwell,sharedDriveways,targetFrameMs} from './rendering';
+import {canvasDpr,cardinalRoadTopology,facilityWarningBadges,nextRenderQuality,renderBudget,roadFacingDoor,routeWithDwell,sharedDriveways,sidewalkSlabs,targetFrameMs} from './rendering';
 
 describe('render budget',()=>{
  it('caps high-density mobile canvases at DPR 1.5',()=>{
@@ -64,3 +64,5 @@ describe('render budget',()=>{
   const returning=routeWithDwell(1.9,.2);expect(returning.moving).toBe(true);expect(returning.progress).toBeCloseTo(.5);
  });
 });
+
+describe('sidewalk rendering geometry',()=>{it('keeps four pedestrian slabs beside every road and extends connected edges',()=>{const isolated=sidewalkSlabs({mask:0,degree:0,kind:'isolated',north:false,east:false,south:false,west:false});expect(isolated).toHaveLength(4);const corner=sidewalkSlabs({mask:3,degree:2,kind:'corner',north:true,east:true,south:false,west:false});expect(corner.length).toBeGreaterThan(isolated.length);expect(corner.every(s=>s.width>0&&s.depth>0)).toBe(true)})});

@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "qa:uiux": "node scripts/ui-ux-contract.cjs",
+    "qa:citizens": "node qa-art/citizens-qa.cjs",
     "preview": "vite preview"
   },
   "dependencies": {

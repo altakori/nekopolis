@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {cardinalRoadTopology,sharedDriveways} from './rendering';
+import {cardinalRoadTopology,sharedDriveways,sidewalkSlabs} from './rendering';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 import {createCatDecalCanvas,type CatDecalStyle} from './cat-decals';
 import {W,H,EXTERNAL_ROAD,RIVER_PATH,DISTRICTS,dragLine,footprint,footprintCenter,footprintCells,facilityServiceAreaCells,isRiverCell,districtForCell,firstContractGuide,utilityNetworkCells,utilitySegmentsAt,type BuildingKind,type State} from './simulation';
@@ -17,6 +17,8 @@ function roadVisual(parent:THREE.Object3D,topology:ReturnType<typeof cardinalRoa
  // Build a flat union of one centre pad and only the connected arms. Keeping every
  // piece at the same height removes the raised circular "plug" formerly visible at junctions.
  box(parent,[.72,.12,.72],[0,.06,0],foundation,.9);box(parent,[.64,.075,.64],[0,.1575,0],asphalt,.82);
+ // Pedestrian slabs sit flush beside the asphalt and continue through joins.
+ for(const slab of sidewalkSlabs(topology))box(parent,[slab.width,.045,slab.depth],[slab.x,.13,slab.z],'#d8c9a5',.92);
  const arm=(axis:'x'|'z',sign:number)=>{const horizontal=axis==='x',center=sign*.4;box(parent,horizontal?[.48,.12,.72]:[.72,.12,.48],[horizontal?center:0,.06,horizontal?0:center],foundation,.9);box(parent,horizontal?[.5,.075,.64]:[.64,.075,.5],[horizontal?center:0,.1575,horizontal?0:center],asphalt,.82)};
  if(topology.north)arm('z',-1);if(topology.east)arm('x',1);if(topology.south)arm('z',1);if(topology.west)arm('x',-1);
  // Lane marks stop before a corner or junction instead of drawing a bright cross through it.
@@ -161,7 +163,7 @@ export class V2Scene{
  private city=new THREE.Group();private preview=new THREE.Group();private guide=new THREE.Group();private serviceHalo=new THREE.Group();private walkers=new THREE.Group();private walkerData:{sprite:THREE.Sprite;route:THREE.Vector3[];progress:number;speed:number;pause:number}[]=[];private pickables:THREE.Object3D[]=[];private selectedRing?:THREE.Mesh;private terrainPropsByCell=new Map<number,THREE.Object3D[]>();private unlockedCount=0;private raycaster=new THREE.Raycaster();private pointer=new THREE.Vector2();private river=riverRibbon();private timer=new THREE.Timer();private reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;private mobile=innerWidth<720;private lastRender=0;
  constructor(readonly canvas:HTMLCanvasElement){
   this.renderer=new THREE.WebGLRenderer({canvas,antialias:!this.mobile,powerPreference:'high-performance'});this.renderer.setPixelRatio(Math.min(devicePixelRatio,this.mobile?1.25:1.6));this.renderer.shadowMap.enabled=!this.mobile;this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.06;
-  this.scene.background=new THREE.Color('#b9d5cf');this.scene.fog=null;this.camera.position.set(18,22,23);this.controls=new OrbitControls(this.camera,canvas);this.controls.enableDamping=true;this.controls.target.set(0,0,-.5);this.controls.minDistance=12;this.controls.maxDistance=48;this.controls.maxPolarAngle=Math.PI*.47;this.controls.mouseButtons.LEFT=null as unknown as THREE.MOUSE;this.controls.mouseButtons.RIGHT=THREE.MOUSE.ROTATE;this.controls.mouseButtons.MIDDLE=THREE.MOUSE.DOLLY;this.controls.touches.ONE=THREE.TOUCH.PAN;this.controls.touches.TWO=THREE.TOUCH.DOLLY_ROTATE;this.controls.minPolarAngle=.08;this.controls.maxPolarAngle=Math.PI*.82;
+  this.scene.background=new THREE.Color('#b9d5cf');this.scene.fog=null;this.camera.position.set(18,22,23);this.controls=new OrbitControls(this.camera,canvas);this.controls.enableDamping=true;this.controls.target.set(0,0,-.5);this.controls.minDistance=12;this.controls.maxDistance=48;this.controls.maxPolarAngle=Math.PI*.47;this.controls.mouseButtons.LEFT=THREE.MOUSE.PAN;this.controls.mouseButtons.RIGHT=null as unknown as THREE.MOUSE;this.controls.mouseButtons.MIDDLE=THREE.MOUSE.DOLLY;this.controls.touches.ONE=THREE.TOUCH.PAN;this.controls.touches.TWO=THREE.TOUCH.DOLLY_PAN;this.controls.minPolarAngle=.08;this.controls.maxPolarAngle=Math.PI*.82;
   this.scene.add(new THREE.HemisphereLight('#eefff8','#344b42',2.1));const sun=new THREE.DirectionalLight('#fff1d5',3);sun.position.set(-13,26,16);sun.castShadow=!this.mobile;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-22;sun.shadow.camera.right=22;sun.shadow.camera.top=20;sun.shadow.camera.bottom=-20;this.scene.add(sun);
 
   this.groundHit=new THREE.Mesh(new THREE.PlaneGeometry(W,H),new THREE.MeshBasicMaterial({visible:false,side:THREE.DoubleSide}));this.groundHit.rotation.x=-Math.PI/2;this.groundHit.position.y=.03;this.scene.add(this.groundHit);
