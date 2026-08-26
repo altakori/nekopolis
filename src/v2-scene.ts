@@ -4,8 +4,8 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 import {createCatDecalCanvas,type CatDecalStyle} from './cat-decals';
 import {W,H,EXTERNAL_ROAD,RIVER_PATH,DISTRICTS,dragLine,footprint,footprintCenter,footprintCells,facilityServiceAreaCells,isRiverCell,districtForCell,firstContractGuide,utilityNetworkCells,utilitySegmentsAt,type BuildingKind,type State} from './simulation';
 
-const COLORS:Record<BuildingKind,string>={road:'#8f846f',wire:'#f4c84f',pipe:'#66c9ef',field:'#82b85f',farm:'#c69759',plant:'#df735e',intake:'#4ba7c3',purifier:'#69bdbb',quarry:'#a29175',litter:'#78a99b',feed:'#df805f',fishery:'#4d9caa',workshop:'#bd759a',recycler:'#709982',teahouse:'#d77f59',dorm:'#859dc7',hall:'#dab353',plaza:'#ebbd4d'};
-const POWER_KINDS=new Set<BuildingKind>(['plant','intake','purifier','farm','litter','feed','fishery','workshop','recycler','teahouse','dorm','hall','plaza']);
+const COLORS:Record<BuildingKind,string>={road:'#8f846f',wire:'#f4c84f',pipe:'#66c9ef',field:'#82b85f',farm:'#c69759',plant:'#df735e',intake:'#4ba7c3',purifier:'#69bdbb',quarry:'#a29175',litter:'#78a99b',feed:'#df805f',fishery:'#4d9caa',teahouse:'#d77f59',dorm:'#859dc7',hall:'#dab353',plaza:'#ebbd4d'};
+const POWER_KINDS=new Set<BuildingKind>(['plant','intake','purifier','farm','litter','feed','fishery','teahouse','dorm','hall','plaza']);
 const WATER_KINDS=new Set<BuildingKind>(['intake','purifier','field','farm','litter','feed','teahouse','dorm','hall','plaza']);
 const mat=(color:string,rough=.72,metal=.04)=>new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
 const box=(parent:THREE.Object3D,size:[number,number,number],pos:[number,number,number],color:string,rough=.72)=>{const mesh=new THREE.Mesh(new THREE.BoxGeometry(...size),mat(color,rough));mesh.position.set(...pos);mesh.castShadow=mesh.receiveShadow=true;parent.add(mesh);return mesh};
@@ -131,22 +131,6 @@ function facilityModel(kind:BuildingKind,level:number){
   body([1.6,.9,1.4],.5);if(level===1){roof(g,1.75,1.5,1.2,'#775047');cyl(g,.27,1.35,[.5,.9,-.3],'#e5b877');}
   if(level>=2){roof(g,1.7,1.45,1.15,'#775047');for(const x of[-.58,.58])cyl(g,.24,1.35,[x,.9,-.2],'#e5b877');box(g,[.8,.22,.3],[0,1.15,.35],'#b86b53');}
   if(level===3){box(g,[.65,1.2,.55],[0,1.05,0],c);for(const x of[-.7,.7])cyl(g,.25,1.5,[x,.9,-.2],'#e5b877');box(g,[1.5,.12,.14],[0,1.8,.35],'#d6a05f');ears(g,2,'#775047');box(g,[.25,.06,.06],[0,1.86,.5],'#d9c38c')}
- } else if(kind==='workshop'){
-  body([1.7,.85,1.45],.48);if(level===1){roof(g,1.85,1.55,1.2,'#745069');box(g,[.24,1.4,.24],[.55,.9,-.35],'#d7aa7d');}
-  if(level>=2){roof(g,1.85,1.55,1.15,'#745069');box(g,[.55,.8,.75],[-.62,.55,0],'#a66583');for(const x of[-.6,.0,.6])box(g,[.16,.55,.12],[x,.9,.7],'#d7aa7d');}
-  if(level===3){box(g,[.72,.95,1.2],[-.48,.56,0],'#a66583');box(g,[.72,.95,1.2],[.48,.56,0],'#a66583');roof(g,1.85,1.55,1.18,'#745069');for(const x of[-.65,.65])cyl(g,.12,1.25,[x,1.2,-.4],'#d7aa7d');box(g,[1.35,.07,.07],[0,1.72,-.4],'#d7aa7d');pipeBetween(g,new THREE.Vector3(.55,0,.55),new THREE.Vector3(.8,0,-.35),'#4e6970',.055,1.55)}
- } else if(kind==='recycler'){
-  body([1.7,.82,1.5],.45);if(level===1){box(g,[1.25,.2,1.05],[0,.95,0],'#36554a');for(const x of[-.45,0,.45])cyl(g,.12,.18,[x,1.08,.25],'#e6bd68');}
-  if(level>=2){box(g,[1.5,.16,.3],[0,1.02,.4],'#d0aa62');for(const x of[-.5,0,.5])cyl(g,.1,.22,[x,1.15,.4],'#e6bd68');box(g,[.45,.5,.55],[.55,.65,-.2],'#4c7460');}
-  if(level===3){box(g,[1.5,1.05,1.2],[0,.55,0],'#557c69');roof(g,1.65,1.35,1.25,'#36554a');box(g,[1.55,.12,.28],[0,1.48,.4],'#d0aa62');cyl(g,.18,.7,[-.58,1.75,0],'#d0aa62');paw(g,[.58,.96,.73],'#d6e6c2')}
- } else if(kind==='teahouse'){
-  body([1.55,.75,1.35],.42);if(level===1){roof(g,1.8,1.5,1.05,'#69473b');box(g,[.65,.3,.1],[0,.55,.72],'#f2cc8d');}
-  if(level>=2){roof(g,1.8,1.5,1.05,'#69473b');for(const x of[-.62,.62])cyl(g,.045,1,[x,.55,.62],'#8b6547',8);box(g,[1.55,.08,.08],[0,1.03,.62],'#f2cc8d');for(const x of[-.5,.5])cyl(g,.1,.1,[x,.95,.7],'#f6d57b',10);}
-  if(level===3){box(g,[1.25,.65,1.1],[0,.52,0],'#d07b58');roof(g,1.95,1.65,1.15,'#69473b');for(const x of[-.7,.7])cyl(g,.05,1.3,[x,.7,.68],'#8b6547',8);box(g,[1.6,.08,.08],[0,1.4,.68],'#f2cc8d');for(const x of[-.55,0,.55])cyl(g,.09,.12,[x,1.3,.7],'#f6d57b',10);for(const x of[-.2,.2])cyl(g,.12,.5,[x,1.55,.0],'#d6e6da',10)}
- } else if(kind==='dorm'){
-  if(level===1){body([1.65,.85,1.5],.43);roof(g,1.9,1.7,1.13,'#4f6d66');box(g,[.35,.64,.08],[0,.32,.79],'#936c50');paw(g,[0,.5,.84],'#e5cf9c')}
-  if(level===2){box(g,[1.75,2.05,1.5],[0,1.03,0],'#aeb3ae');for(const y of[.55,1.2,1.75]){windowBand(g,1.35,y,.77);box(g,[1.4,.08,.35],[0,y-.18,.92],'#718d84')}box(g,[.9,.18,.65],[.28,2.13,0],'#84a78f');box(g,[1.5,.08,.8],[0,.16,.55],'#82a873')}
-  if(level===3){box(g,[1.62,2.5,1.42],[0,1.25,0],'#919da0');for(let y=.5;y<2.7;y+=.55)windowBand(g,1.2,y,.73);box(g,[1.45,.12,1.1],[0,2.58,0],'#80a694');roof(g,1.5,1.15,3.05,'#6e9079');box(g,[.35,.35,.1],[0,.38,.76],'#936c50');paw(g,[0,.62,.8],'#e5cf9c')}
  } else if(kind==='hall'){
   if(level===1){body([1.65,.82,1.45],.41);roof(g,1.84,1.62,1.08,'#705045');box(g,[.62,.38,.06],[0,.38,.74],'#8b6547');box(g,[.32,.3,.04],[0,.65,.77],'#8ec2c2')}
   if(level===2){body([1.48,1.55,1.3],.78);roof(g,1.7,1.5,1.72,'#705045');for(const x of[-.38,.38])cyl(g,.06,1.1,[x,.65,.78],'#765445',8);cyl(g,.16,.04,[0,1.83,.02],'#f6d57b',12);box(g,[.75,.06,.08],[0,1.9,.75],'#f6d57b')}
