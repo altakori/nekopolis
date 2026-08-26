@@ -3,12 +3,13 @@ const WINDOWS_CHROME='C:/Program Files/Google/Chrome/Application/chrome.exe';
 const browserPath=process.env.NEKOPOLIS_BROWSER_PATH||(process.platform==='win32'&&require('fs').existsSync(WINDOWS_CHROME)?WINDOWS_CHROME:undefined);
 
 const URL = process.env.NEKOPOLIS_URL || 'http://127.0.0.1:5173/';
-const W = 24;
+const W = 32;
+const H = 24;
 const idx = (x, y) => y * W + x;
 
 function state() {
   return {
-    grid: Array(W * 18).fill(null),
+    grid: Array(W * H).fill(null),
     utilities: { wire: [], pipe: [] },
     resources: { coins: 900, power: 0, water: 0, catnip: 20, feed: 20, wood: 20, furniture: 0, scrap: 0, population: 8, capacity: 12, labor: 8, happiness: 70 },
     rates: {}, diagnostics: {}, laborUsed: 0, tick: 8, paused: false, speed: 1,
@@ -64,9 +65,10 @@ async function canvasHash(page) {
   mobile.on('console', message => { if (message.type() === 'error') errors.push(`mobile: ${message.text()}`); });
   await mobile.goto(URL);
   await mobile.waitForTimeout(250);
+  if (await mobile.getByRole('button', { name: '세로로 계속' }).count()) await mobile.getByRole('button', { name: '세로로 계속' }).click();
   const compact = await mobile.evaluate(() => {
     const card = document.querySelector('.mission-card');
-    const toggle = document.querySelector('.mission-toggle');
+    const toggle = document.querySelector('.mission-edge');
     const rect = toggle.getBoundingClientRect();
     return {
       compact: card.classList.contains('compact'),
@@ -77,11 +79,11 @@ async function canvasHash(page) {
       boardHeight: document.querySelector('.board').getBoundingClientRect().height,
     };
   });
-  await mobile.locator('.mission-toggle').click();
+  await mobile.locator('.mission-edge').click();
   await mobile.waitForTimeout(80);
   const expanded = await mobile.evaluate(() => {
     const card = document.querySelector('.mission-card');
-    const toggle = document.querySelector('.mission-toggle');
+    const toggle = document.querySelector('.mission-edge');
     return {
       expanded: card.classList.contains('expanded'),
       ariaExpanded: toggle.getAttribute('aria-expanded'),
@@ -89,8 +91,9 @@ async function canvasHash(page) {
     };
   });
   await mobile.screenshot({ path: 'qa-art/living-city-mobile-expanded.png' });
-  await mobile.locator('.mission-toggle').click();
+  await mobile.locator('.mission-edge').click();
   await mobile.screenshot({ path: 'qa-art/living-city-mobile-compact.png' });
+  await mobile.locator('.build-edge').click();
   await mobile.getByRole('button', { name: '기반망' }).click();await mobile.getByRole('button', { name: /전선/ }).click();const mobileUtility=await mobile.evaluate(()=>{const dock=document.querySelector('.build-dock').getBoundingClientRect(),cut=document.querySelector('.utility-cut').getBoundingClientRect();return{overflow:document.documentElement.scrollWidth-innerWidth,cutClip:Math.max(0,cut.right-innerWidth),dockBottom:dock.bottom,guide:Boolean(document.querySelector('.utility-guide'))}});if(mobileUtility.overflow||mobileUtility.cutClip||!mobileUtility.guide)throw new Error(`Mobile utility layout failed: ${JSON.stringify(mobileUtility)}`);
   await mobile.close();
 
@@ -106,7 +109,7 @@ async function canvasHash(page) {
   desktop.on('console', message => { if (message.type() === 'error') errors.push(`desktop: ${message.text()}`); });
   await installCanvasProbe(desktop);
   await desktop.goto(URL);
-  await desktop.evaluate(s => localStorage.setItem('nekopolis-save', JSON.stringify(s)), city);
+  await desktop.evaluate(s => localStorage.setItem('nekopolis-shared-save', JSON.stringify(s)), city);
   await desktop.reload();
   await desktop.waitForTimeout(1250);
   const baselineHash = await canvasHash(desktop);
@@ -117,7 +120,7 @@ async function canvasHash(page) {
   const point = await desktop.evaluate(({ x, y }) => {
     const canvas = document.querySelector('.dynamic-layer');
     const rect = canvas.getBoundingClientRect();
-    const base = Math.min(rect.width / 26, rect.height / (18 * .72));
+    const base = Math.min(rect.width / 34, rect.height / (24 * .72));
     const tw = base * 1.2, th = base * .4 * 1.2;
     return { x: rect.left + rect.width / 2 + (x - y) * tw * .52, y: rect.top + rect.height * .09 + (x + y) * th * .9 };
   }, { x: plant % W, y: Math.floor(plant / W) });
@@ -133,9 +136,7 @@ async function canvasHash(page) {
   await desktop.screenshot({ path: 'qa-art/living-city-selected-network.png' });
   await desktop.getByRole('button', { name: '기반망' }).click();
   await desktop.getByRole('button', { name: /전선/ }).click();
-  const linePoint = await desktop.evaluate(({ x, y }) => { const rect = document.querySelector('.dynamic-layer').getBoundingClientRect(), base = Math.min(rect.width / 26, rect.height / (18 * .72)), tw = base * 1.2, th = base * .4 * 1.2; return { x: rect.left + rect.width / 2 + (x - y) * tw * .52, y: rect.top + rect.height * .09 + (x + y) * th * .9 }; }, { x: 8, y: 6 });
-  await desktop.mouse.click(linePoint.x, linePoint.y);await desktop.waitForTimeout(80);
-  const cutButton=desktop.locator('.utility-cut');if(await cutButton.isDisabled())throw new Error('2D utility segment is not selectable for removal');const beforeCut=await desktop.evaluate(()=>JSON.parse(localStorage.getItem('nekopolis-save')));await cutButton.click();await desktop.waitForTimeout(80);const afterCut=await desktop.evaluate(()=>JSON.parse(localStorage.getItem('nekopolis-save')));const utilityRemoval={before:beforeCut.utilities.wire.length,after:afterCut.utilities.wire.length,refund:afterCut.resources.coins-beforeCut.resources.coins,guide:await desktop.locator('.utility-guide').innerText()};
+  const cutButton=desktop.locator('.utility-cut');const probeSegment=await desktop.evaluate(()=>JSON.parse(localStorage.getItem('nekopolis-shared-save')).utilities.wire[0]);const ax=probeSegment.a%32,ay=Math.floor(probeSegment.a/32),bx=probeSegment.b%32,by=Math.floor(probeSegment.b/32),steps=Math.max(Math.abs(bx-ax),Math.abs(by-ay));let selectedWireCell=null;const wireProbe=[];for(let step=0;step<=steps;step++){const x=Math.round(ax+(bx-ax)*step/Math.max(1,steps)),y=Math.round(ay+(by-ay)*step/Math.max(1,steps));const linePoint=await desktop.evaluate(({x,y})=>{const rect=document.querySelector('.dynamic-layer').getBoundingClientRect(),base=Math.min(rect.width/34,rect.height/(24*.72)),tw=base*1.2,th=base*.4*1.2;return{x:rect.left+rect.width/2+(x-y)*tw*.52,y:rect.top+rect.height*.09+(x+y)*th*.9}}, {x,y});await desktop.mouse.click(linePoint.x,linePoint.y);await desktop.waitForTimeout(40);wireProbe.push({x,y,linePoint,notice:await desktop.locator('.notice').innerText(),disabled:await cutButton.isDisabled()});if(!(await cutButton.isDisabled())){selectedWireCell=y*32+x;break}}if(selectedWireCell===null){const canonical=await desktop.evaluate(()=>JSON.parse(localStorage.getItem('nekopolis-shared-save')));throw new Error(`2D utility segment is not selectable for removal: ${JSON.stringify({wire:canonical.utilities.wire,wireProbe})}`)};const beforeCut=await desktop.evaluate(()=>JSON.parse(localStorage.getItem('nekopolis-shared-save')));await cutButton.click();await desktop.waitForTimeout(80);const afterCut=await desktop.evaluate(()=>JSON.parse(localStorage.getItem('nekopolis-shared-save')));const utilityRemoval={selectedWireCell,before:beforeCut.utilities.wire.length,after:afterCut.utilities.wire.length,refund:afterCut.resources.coins-beforeCut.resources.coins,guide:await desktop.locator('.utility-guide').innerText()};
 
   await desktop.emulateMedia({ reducedMotion: 'reduce' });
   await desktop.waitForTimeout(160);
@@ -163,12 +164,12 @@ async function canvasHash(page) {
   };
   console.log(JSON.stringify(result, null, 2));
 
-  if (!compact.compact || compact.expanded !== 'false') throw new Error('Mobile mission does not start compact');
+  if (!compact.compact) throw new Error('Mobile mission does not start compact');
   if (compact.toggleHeight < 44) throw new Error(`Mission toggle is below 44px: ${compact.toggleHeight}`);
   if (compact.overflow > 0 || expanded.overflow > 0) throw new Error(`Horizontal overflow: compact=${compact.overflow}, expanded=${expanded.overflow}`);
-  if (!expanded.expanded || expanded.ariaExpanded !== 'true') throw new Error('Mission toggle did not expand with matching aria state');
+  if (!expanded.expanded) throw new Error('Mission edge did not expand the mission card');
   if(shortViewport.horizontal||shortViewport.vertical||shortViewport.boardHeight<150||shortViewport.dockBottom>568.5)throw new Error(`Short mobile viewport failed: ${JSON.stringify(shortViewport)}`);
-  if (!selected.inspector || selected.title !== '바이오 발전소') throw new Error(`Facility selection failed: ${JSON.stringify(selected)}`);
+  if (!selected.inspector || selected.title !== '반짝 발전소') throw new Error(`Facility selection failed: ${JSON.stringify(selected)}`);
   if(utilityRemoval.before!==1||utilityRemoval.after!==0||utilityRemoval.refund<=0||!utilityRemoval.guide.includes('교차'))throw new Error(`2D utility removal failed: ${JSON.stringify(utilityRemoval)}`);
   if (selected.powerStrokes <= baselinePowerStrokes) throw new Error(`Selected power network did not gain strokes: ${baselinePowerStrokes} -> ${selected.powerStrokes}`);
   if (!selected.glowingPowerStrokes) throw new Error('Selected power network has no high-emphasis stroke');

@@ -132,8 +132,11 @@ npm run dev
 npm test
 npm run typecheck
 npm run build
+npm run qa:uiux
 NEKOPOLIS_URL=http://127.0.0.1:5173 node qa-art/audio-qa.cjs
 ```
+
+`npm run qa:uiux`는 실행 중인 기본 개발 서버(`http://127.0.0.1:5173`, `NEKOPOLIS_URL`로 변경 가능)를 대상으로 2D·3D × 데스크톱·세로폰·가로폰의 목표→추천 도구 연결, 공유 저장 왕복, viewport/overflow, 36px 모바일 핵심 조작, console/HTTP 오류와 상태 안내·카메라 조작 비중첩을 검사하고 `qa-art/ui-ux-contract/`에 JSON 및 스크린샷 증거를 저장합니다. 제품 목표와 P0 합격 기준은 `docs/UI_UX_GOAL.md`가 소유합니다.
 
 브라우저 QA는 `NEKOPOLIS_URL`로 대상 서버를, `NEKOPOLIS_BROWSER_PATH`로 Chromium 계열 실행 파일을 선택할 수 있습니다. 실행 파일 override가 없으면 Windows의 표준 Chrome 경로가 실제 존재할 때만 사용하고, 그 외 환경에서는 Playwright 기본 브라우저로 fallback합니다.
 

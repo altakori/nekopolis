@@ -10,6 +10,7 @@
     "build": "tsc && vite build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "qa:uiux": "node scripts/ui-ux-contract.cjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.4"
+    "@types/react-dom": "^19.2.4",
+    "playwright": "^1.55.1"
   }
 }
