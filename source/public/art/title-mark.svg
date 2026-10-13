@@ -1,0 +1,221 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">냥토피아 공업구역 — NEKOPOLIS FOUNDRY</title>
+  <desc id="desc">Warm-dusk title mark for a 2D cat industrial city-builder: cat ears, gears, and factory pipes framing the Korean title 냥토피아 공업구역 with the English subtitle NEKOPOLIS FOUNDRY.</desc>
+  <defs>
+    <linearGradient id="duskSky" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3a1d4a"/>
+      <stop offset="45%" stop-color="#c45c3e"/>
+      <stop offset="100%" stop-color="#f0a06a"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f6d7a8"/>
+      <stop offset="50%" stop-color="#d4925a"/>
+      <stop offset="100%" stop-color="#8a4a2f"/>
+    </linearGradient>
+    <linearGradient id="gearFace" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe2b0"/>
+      <stop offset="100%" stop-color="#b86b3c"/>
+    </linearGradient>
+    <linearGradient id="pipeBody" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e8c49a"/>
+      <stop offset="100%" stop-color="#7a4530"/>
+    </linearGradient>
+    <linearGradient id="titleFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fff6e8"/>
+      <stop offset="55%" stop-color="#ffd29a"/>
+      <stop offset="100%" stop-color="#e0894a"/>
+    </linearGradient>
+    <filter id="softGlow" x="-20%" y="-40%" width="140%" height="180%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <symbol id="gear" viewBox="-50 -50 100 100">
+      <path fill="url(#gearFace)" stroke="#5a2e1c" stroke-width="3"
+        d="M-8,-44 L8,-44 L12,-32 A40,40 0 0 1 22,-28 L34,-34 L44,-22 L34,-10 A40,40 0 0 1 32,8 L44,14 L34,28 L22,22 A40,40 0 0 1 8,32 L4,44 L-8,44 L-12,32 A40,40 0 0 1 -22,28 L-34,34 L-44,22 L-34,10 A40,40 0 0 1 -32,-8 L-44,-14 L-34,-28 L-22,-22 A40,40 0 0 1 -8,-32 Z"/>
+      <circle cx="0" cy="0" r="14" fill="#2a1520" stroke="#f0c090" stroke-width="3"/>
+      <circle cx="0" cy="0" r="5" fill="#f6d7a8"/>
+    </symbol>
+  </defs>
+
+  <!-- subtle dusk band (transparent outside shapes) -->
+  <rect x="40" y="48" width="1120" height="264" rx="28" fill="url(#duskSky)" opacity="0.22"/>
+
+  <!-- left pipe stack -->
+  <g fill="url(#pipeBody)" stroke="#4a2418" stroke-width="3">
+    <rect x="70" y="90" width="36" height="180" rx="8"/>
+    <rect x="58" y="78" width="60" height="22" rx="6"/>
+    <rect x="58" y="250" width="60" height="22" rx="6"/>
+    <path d="M106 130 h70 a14 14 0 0 1 14 14 v40 a14 14 0 0 1 -14 14 h-40" fill="none" stroke="url(#metal)" stroke-width="18" stroke-linecap="round"/>
+    <circle cx="188" cy="198" r="16" fill="url(#gearFace)" stroke="#4a2418" stroke-width="3"/>
+  </g>
+  <!-- left steam puffs -->
+  <g fill="#f8e0c8" opacity="0.55">
+    <ellipse cx="88" cy="62" rx="14" ry="10"/>
+    <ellipse cx="108" cy="48" rx="18" ry="12"/>
+    <ellipse cx="78" cy="44" rx="10" ry="8"/>
+  </g>
+
+  <!-- right pipe / chimney -->
+  <g fill="url(#pipeBody)" stroke="#4a2418" stroke-width="3">
+    <rect x="1094" y="100" width="40" height="170" rx="8"/>
+    <rect x="1080" y="88" width="68" height="24" rx="6"/>
+    <rect x="1080" y="250" width="68" height="24" rx="6"/>
+    <path d="M1094 150 h-64 a16 16 0 0 0 -16 16 v36 a16 16 0 0 0 16 16 h30" fill="none" stroke="url(#metal)" stroke-width="16" stroke-linecap="round"/>
+  </g>
+  <g fill="#f8e0c8" opacity="0.5">
+    <ellipse cx="1114" cy="70" rx="16" ry="11"/>
+    <ellipse cx="1134" cy="54" rx="20" ry="13"/>
+    <ellipse cx="1100" cy="50" rx="11" ry="8"/>
+  </g>
+
+  <!-- cat-ear crown above title -->
+  <g filter="url(#softGlow)">
+    <path d="M430 118 L470 42 L510 118 Z" fill="url(#metal)" stroke="#4a2418" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M690 118 L730 42 L770 118 Z" fill="url(#metal)" stroke="#4a2418" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M448 112 L470 62 L492 112 Z" fill="#ffb48a" opacity="0.85"/>
+    <path d="M708 112 L730 62 L752 112 Z" fill="#ffb48a" opacity="0.85"/>
+    <!-- ear tufts -->
+    <path d="M470 42 L458 28 M470 42 L482 26" stroke="#f0c090" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M730 42 L718 28 M730 42 L742 26" stroke="#f0c090" stroke-width="3" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- gears flanking title -->
+  <use href="#gear" x="210" y="120" width="110" height="110"/>
+  <use href="#gear" x="880" y="125" width="100" height="100" transform="rotate(18 930 175)"/>
+  <use href="#gear" x="980" y="200" width="70" height="70" transform="rotate(-12 1015 235)"/>
+  <use href="#gear" x="150" y="210" width="64" height="64" transform="rotate(30 182 242)"/>
+
+  <!-- riveted title plate -->
+  <rect x="300" y="118" width="600" height="150" rx="22" fill="#2a1520" opacity="0.55" stroke="url(#metal)" stroke-width="4"/>
+  <g fill="#d4925a">
+    <circle cx="322" cy="140" r="5"/>
+    <circle cx="878" cy="140" r="5"/>
+    <circle cx="322" cy="246" r="5"/>
+    <circle cx="878" cy="246" r="5"/>
+  </g>
+
+  <!-- Korean title as pure vector letterforms (blocky industrial Hangul stylization) -->
+  <g fill="url(#titleFill)" stroke="#5a2e1c" stroke-width="2.5" stroke-linejoin="round" filter="url(#softGlow)">
+    <!-- 냥 -->
+    <g transform="translate(330,145)">
+      <rect x="8" y="8" width="52" height="10" rx="2"/>
+      <rect x="8" y="8" width="10" height="48" rx="2"/>
+      <rect x="50" y="8" width="10" height="48" rx="2"/>
+      <rect x="8" y="46" width="52" height="10" rx="2"/>
+      <circle cx="34" cy="32" r="7"/>
+      <path d="M22 68 h24 v18 h-10 v-8 h-4 v8 h-10 z"/>
+    </g>
+    <!-- 토 -->
+    <g transform="translate(410,145)">
+      <rect x="6" y="10" width="56" height="12" rx="2"/>
+      <rect x="28" y="10" width="12" height="42" rx="2"/>
+      <rect x="10" y="58" width="48" height="12" rx="2"/>
+      <rect x="28" y="58" width="12" height="28" rx="2"/>
+    </g>
+    <!-- 피 -->
+    <g transform="translate(490,145)">
+      <rect x="8" y="10" width="52" height="12" rx="2"/>
+      <rect x="8" y="10" width="12" height="40" rx="2"/>
+      <rect x="48" y="10" width="12" height="40" rx="2"/>
+      <rect x="8" y="38" width="52" height="12" rx="2"/>
+      <rect x="28" y="50" width="12" height="36" rx="2"/>
+    </g>
+    <!-- 아 -->
+    <g transform="translate(570,145)">
+      <rect x="6" y="10" width="40" height="12" rx="2"/>
+      <rect x="6" y="10" width="12" height="56" rx="2"/>
+      <rect x="6" y="54" width="40" height="12" rx="2"/>
+      <rect x="54" y="8" width="12" height="72" rx="2"/>
+      <rect x="54" y="36" width="22" height="12" rx="2"/>
+    </g>
+    <!-- spacer dot / bolt -->
+    <circle cx="660" cy="190" r="6" fill="#ffb48a" stroke="#5a2e1c" stroke-width="2"/>
+    <!-- 공 -->
+    <g transform="translate(680,145)">
+      <circle cx="34" cy="36" r="26" fill="none" stroke="url(#titleFill)" stroke-width="12"/>
+      <circle cx="34" cy="36" r="26" fill="none" stroke="#5a2e1c" stroke-width="2.5"/>
+      <rect x="22" y="70" width="24" height="14" rx="2"/>
+    </g>
+    <!-- 업 -->
+    <g transform="translate(760,145)">
+      <rect x="8" y="10" width="52" height="12" rx="2"/>
+      <rect x="8" y="10" width="12" height="36" rx="2"/>
+      <rect x="48" y="10" width="12" height="36" rx="2"/>
+      <rect x="8" y="34" width="52" height="12" rx="2"/>
+      <rect x="14" y="56" width="40" height="10" rx="2"/>
+      <rect x="14" y="72" width="40" height="10" rx="2"/>
+      <rect x="14" y="56" width="10" height="26" rx="2"/>
+      <rect x="44" y="56" width="10" height="26" rx="2"/>
+    </g>
+    <!-- 구 -->
+    <g transform="translate(840,145)">
+      <rect x="8" y="14" width="52" height="12" rx="2"/>
+      <rect x="8" y="14" width="12" height="40" rx="2"/>
+      <rect x="48" y="14" width="12" height="40" rx="2"/>
+      <rect x="8" y="48" width="52" height="12" rx="2"/>
+      <rect x="8" y="70" width="52" height="12" rx="2"/>
+    </g>
+    <!-- 역 -->
+    <g transform="translate(920,145)">
+      <rect x="6" y="10" width="44" height="12" rx="2"/>
+      <rect x="6" y="10" width="12" height="48" rx="2"/>
+      <rect x="38" y="10" width="12" height="48" rx="2"/>
+      <rect x="6" y="46" width="44" height="12" rx="2"/>
+      <rect x="58" y="18" width="12" height="56" rx="2"/>
+      <path d="M58 36 h20 v12 h-20 z"/>
+      <rect x="16" y="68" width="28" height="14" rx="2"/>
+    </g>
+  </g>
+
+  <!-- small English subtitle NEKOPOLIS FOUNDRY as geometric caps -->
+  <g fill="#f0c090" stroke="#4a2418" stroke-width="1.2" transform="translate(360,278) scale(1.05,1)">
+    <!-- N -->
+    <path d="M0 0 V22 H5 L14 8 V22 H19 V0 H14 L5 14 V0 Z"/>
+    <!-- E -->
+    <path d="M26 0 H44 V5 H31 V8 H42 V13 H31 V17 H44 V22 H26 Z"/>
+    <!-- K -->
+    <path d="M50 0 H55 V9 L64 0 H71 L60 11 L71 22 H64 L55 13 V22 H50 Z"/>
+    <!-- O -->
+    <path d="M78 0 H94 V22 H78 Z M83 5 V17 H89 V5 Z"/>
+    <!-- P -->
+    <path d="M100 0 H116 V12 H105 V22 H100 Z M105 5 V7 H111 V5 Z"/>
+    <!-- O -->
+    <path d="M122 0 H138 V22 H122 Z M127 5 V17 H133 V5 Z"/>
+    <!-- L -->
+    <path d="M144 0 H149 V17 H160 V22 H144 Z"/>
+    <!-- I -->
+    <path d="M166 0 H171 V22 H166 Z"/>
+    <!-- S -->
+    <path d="M177 0 H193 V5 H182 V8 H193 V22 H177 V17 H188 V14 H177 Z"/>
+    <!-- space -->
+    <!-- F -->
+    <path d="M210 0 H228 V5 H215 V9 H226 V14 H215 V22 H210 Z"/>
+    <!-- O -->
+    <path d="M234 0 H250 V22 H234 Z M239 5 V17 H245 V5 Z"/>
+    <!-- U -->
+    <path d="M256 0 H261 V17 H269 V0 H274 V22 H256 Z"/>
+    <!-- N -->
+    <path d="M280 0 V22 H285 L294 8 V22 H299 V0 H294 L285 14 V0 Z"/>
+    <!-- D -->
+    <path d="M306 0 H320 L326 6 V16 L320 22 H306 Z M311 5 V17 H318 L321 14 V8 L318 5 Z"/>
+    <!-- R -->
+    <path d="M332 0 H348 V11 H343 L350 22 H344 L337 11 H337 V22 H332 Z M337 5 V6 H343 V5 Z"/>
+    <!-- Y -->
+    <path d="M356 0 H361 L366 9 L371 0 H376 L368 12 V22 H364 V12 Z"/>
+  </g>
+
+  <!-- small paw / bolt accents under plate -->
+  <g fill="#e0894a" opacity="0.9">
+    <circle cx="520" cy="300" r="4"/>
+    <circle cx="540" cy="300" r="4"/>
+    <circle cx="560" cy="300" r="4"/>
+    <ellipse cx="540" cy="314" rx="12" ry="8"/>
+    <circle cx="640" cy="300" r="4"/>
+    <circle cx="660" cy="300" r="4"/>
+    <circle cx="680" cy="300" r="4"/>
+    <ellipse cx="660" cy="314" rx="12" ry="8"/>
+  </g>
+</svg>

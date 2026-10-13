@@ -1,0 +1,182 @@
+const { chromium } = require('playwright');
+const WINDOWS_CHROME='C:/Program Files/Google/Chrome/Application/chrome.exe';
+const browserPath=process.env.NEKOPOLIS_BROWSER_PATH||(process.platform==='win32'&&require('fs').existsSync(WINDOWS_CHROME)?WINDOWS_CHROME:undefined);
+
+const URL = process.env.NEKOPOLIS_URL || 'http://127.0.0.1:5173/';
+const W = 32;
+const H = 24;
+const idx = (x, y) => y * W + x;
+
+function state() {
+  return {
+    grid: Array(W * H).fill(null),
+    utilities: { wire: [], pipe: [] },
+    resources: { coins: 900, power: 0, water: 0, catnip: 20, feed: 20, wood: 20, furniture: 0, scrap: 0, population: 8, capacity: 12, labor: 8, happiness: 70 },
+    rates: {}, diagnostics: {}, laborUsed: 0, tick: 8, paused: false, speed: 1,
+    objective: 0, stage: 4, stableCycles: 0, workPolicy: 'balanced', day: 2,
+    deliveries: 0, lastDispatchTick: -12, log: [],
+  };
+}
+
+function put(s, kind, x, y, size = 2) {
+  const anchor = idx(x, y);
+  for (let yy = 0; yy < size; yy++) for (let xx = 0; xx < size; xx++) {
+    s.grid[idx(x + xx, y + yy)] = { kind, age: 5, anchor, level: 1 };
+  }
+  return anchor;
+}
+
+async function installCanvasProbe(page) {
+  await page.addInitScript(() => {
+    window.__dynamicDrawTimes = [];
+    window.__frameStrokes = [];
+    const clearRect = CanvasRenderingContext2D.prototype.clearRect;
+    const stroke = CanvasRenderingContext2D.prototype.stroke;
+    CanvasRenderingContext2D.prototype.clearRect = function (...args) {
+      if (this.canvas?.classList?.contains('dynamic-layer')) {
+        window.__dynamicDrawTimes.push(performance.now());
+        window.__frameStrokes = [];
+      }
+      return clearRect.apply(this, args);
+    };
+    CanvasRenderingContext2D.prototype.stroke = function (...args) {
+      if (this.canvas?.classList?.contains('dynamic-layer')) {
+        window.__frameStrokes.push({ style: String(this.strokeStyle), width: this.lineWidth, alpha: this.globalAlpha, dash: this.getLineDash() });
+      }
+      return stroke.apply(this, args);
+    };
+  });
+}
+
+async function canvasHash(page) {
+  return page.locator('.dynamic-layer').evaluate(canvas => {
+    const data = canvas.toDataURL();
+    let hash = 2166136261;
+    for (let i = 0; i < data.length; i++) hash = Math.imul(hash ^ data.charCodeAt(i), 16777619);
+    return hash >>> 0;
+  });
+}
+
+(async () => {
+  const browser = await chromium.launch({headless:true,...(browserPath?{executablePath:browserPath}:{})});
+  const errors = [];
+
+  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1.5 });
+  mobile.on('console', message => { if (message.type() === 'error') errors.push(`mobile: ${message.text()}`); });
+  await mobile.goto(URL);
+  await mobile.waitForTimeout(250);
+  if (await mobile.getByRole('button', { name: '세로로 계속' }).count()) await mobile.getByRole('button', { name: '세로로 계속' }).click();
+  const compact = await mobile.evaluate(() => {
+    const card = document.querySelector('.mission-card');
+    const toggle = document.querySelector('.mission-edge');
+    const rect = toggle.getBoundingClientRect();
+    return {
+      compact: card.classList.contains('compact'),
+      expanded: toggle.getAttribute('aria-expanded'),
+      toggleHeight: rect.height,
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      cardBottom: card.getBoundingClientRect().bottom,
+      boardHeight: document.querySelector('.board').getBoundingClientRect().height,
+    };
+  });
+  await mobile.locator('.mission-edge').click();
+  await mobile.waitForTimeout(80);
+  const expanded = await mobile.evaluate(() => {
+    const card = document.querySelector('.mission-card');
+    const toggle = document.querySelector('.mission-edge');
+    return {
+      expanded: card.classList.contains('expanded'),
+      ariaExpanded: toggle.getAttribute('aria-expanded'),
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    };
+  });
+  await mobile.screenshot({ path: 'qa-art/living-city-mobile-expanded.png' });
+  await mobile.locator('.mission-edge').click();
+  await mobile.screenshot({ path: 'qa-art/living-city-mobile-compact.png' });
+  await mobile.locator('.build-edge').click();
+  await mobile.getByRole('button', { name: '기반망' }).click();await mobile.getByRole('button', { name: /전선/ }).click();const mobileUtility=await mobile.evaluate(()=>{const dock=document.querySelector('.build-dock').getBoundingClientRect(),cut=document.querySelector('.utility-cut').getBoundingClientRect();return{overflow:document.documentElement.scrollWidth-innerWidth,cutClip:Math.max(0,cut.right-innerWidth),dockBottom:dock.bottom,guide:Boolean(document.querySelector('.utility-guide'))}});if(mobileUtility.overflow||mobileUtility.cutClip||!mobileUtility.guide)throw new Error(`Mobile utility layout failed: ${JSON.stringify(mobileUtility)}`);
+  await mobile.close();
+
+  const shortMobile=await browser.newPage({viewport:{width:320,height:568},isMobile:true,hasTouch:true});shortMobile.on('console',message=>{if(message.type()==='error')errors.push(`short-mobile: ${message.text()}`)});await shortMobile.goto(URL);await shortMobile.waitForTimeout(250);const shortViewport=await shortMobile.evaluate(()=>{const board=document.querySelector('.board').getBoundingClientRect(),dock=document.querySelector('.build-dock').getBoundingClientRect();return{horizontal:document.documentElement.scrollWidth-innerWidth,vertical:document.documentElement.scrollHeight-innerHeight,boardHeight:board.height,dockBottom:dock.bottom}});await shortMobile.close();
+
+  const city = state();
+  const plant = put(city, 'plant', 5, 6);
+  put(city, 'feed', 10, 6);
+  for (let x = 0; x <= 14; x++) city.grid[idx(x, 8)] = { kind: 'road', age: 5, anchor: idx(x, 8), level: 1 };
+  city.utilities.wire = [{ a: idx(4, 6), b: idx(13, 6) }];
+
+  const desktop = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+  desktop.on('console', message => { if (message.type() === 'error') errors.push(`desktop: ${message.text()}`); });
+  await installCanvasProbe(desktop);
+  await desktop.goto(URL);
+  await desktop.evaluate(s => localStorage.setItem('nekopolis-shared-save', JSON.stringify(s)), city);
+  await desktop.reload();
+  await desktop.waitForTimeout(1250);
+  const baselineHash = await canvasHash(desktop);
+  const baselinePowerStrokes = await desktop.evaluate(() => window.__frameStrokes.filter(s => s.style === '#f2c94c').length);
+  const canvas = desktop.locator('.dynamic-layer');
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('Dynamic canvas missing');
+  const point = await desktop.evaluate(({ x, y }) => {
+    const canvas = document.querySelector('.dynamic-layer');
+    const rect = canvas.getBoundingClientRect();
+    const base = Math.min(rect.width / 34, rect.height / (24 * .72));
+    const tw = base * 1.2, th = base * .4 * 1.2;
+    return { x: rect.left + rect.width / 2 + (x - y) * tw * .52, y: rect.top + rect.height * .09 + (x + y) * th * .9 };
+  }, { x: plant % W, y: Math.floor(plant / W) });
+  await desktop.mouse.click(point.x, point.y);
+  await desktop.waitForTimeout(120);
+  const selectedHash = await canvasHash(desktop);
+  const selected = await desktop.evaluate(() => ({
+    inspector: Boolean(document.querySelector('.inspector')),
+    title: document.querySelector('.inspector h2')?.textContent || '',
+    powerStrokes: window.__frameStrokes.filter(s => s.style === '#f2c94c').length,
+    glowingPowerStrokes: window.__frameStrokes.filter(s => s.style === '#f2c94c' && s.width >= 2 && s.alpha >= .9).length,
+  }));
+  await desktop.screenshot({ path: 'qa-art/living-city-selected-network.png' });
+  await desktop.getByRole('button', { name: '기반망' }).click();
+  await desktop.getByRole('button', { name: /전선/ }).click();
+  const cutButton=desktop.locator('.utility-cut');const probeSegment=await desktop.evaluate(()=>JSON.parse(localStorage.getItem('nekopolis-shared-save')).utilities.wire[0]);const ax=probeSegment.a%32,ay=Math.floor(probeSegment.a/32),bx=probeSegment.b%32,by=Math.floor(probeSegment.b/32),steps=Math.max(Math.abs(bx-ax),Math.abs(by-ay));let selectedWireCell=null;const wireProbe=[];for(let step=0;step<=steps;step++){const x=Math.round(ax+(bx-ax)*step/Math.max(1,steps)),y=Math.round(ay+(by-ay)*step/Math.max(1,steps));const linePoint=await desktop.evaluate(({x,y})=>{const rect=document.querySelector('.dynamic-layer').getBoundingClientRect(),base=Math.min(rect.width/34,rect.height/(24*.72)),tw=base*1.2,th=base*.4*1.2;return{x:rect.left+rect.width/2+(x-y)*tw*.52,y:rect.top+rect.height*.09+(x+y)*th*.9}}, {x,y});await desktop.mouse.click(linePoint.x,linePoint.y);await desktop.waitForTimeout(40);wireProbe.push({x,y,linePoint,notice:await desktop.locator('.notice').innerText(),disabled:await cutButton.isDisabled()});if(!(await cutButton.isDisabled())){selectedWireCell=y*32+x;break}}if(selectedWireCell===null){const canonical=await desktop.evaluate(()=>JSON.parse(localStorage.getItem('nekopolis-shared-save')));throw new Error(`2D utility segment is not selectable for removal: ${JSON.stringify({wire:canonical.utilities.wire,wireProbe})}`)};const beforeCut=await desktop.evaluate(()=>JSON.parse(localStorage.getItem('nekopolis-shared-save')));await cutButton.click();await desktop.waitForTimeout(80);const afterCut=await desktop.evaluate(()=>JSON.parse(localStorage.getItem('nekopolis-shared-save')));const utilityRemoval={selectedWireCell,before:beforeCut.utilities.wire.length,after:afterCut.utilities.wire.length,refund:afterCut.resources.coins-beforeCut.resources.coins,guide:await desktop.locator('.utility-guide').innerText()};
+
+  await desktop.emulateMedia({ reducedMotion: 'reduce' });
+  await desktop.waitForTimeout(160);
+  await desktop.evaluate(() => { window.__dynamicDrawTimes = []; });
+  await desktop.waitForTimeout(320);
+  const reducedIdleFrames = await desktop.evaluate(() => window.__dynamicDrawTimes.length);
+  await desktop.mouse.move(box.x + box.width * .55, box.y + box.height * .58);
+  await desktop.waitForTimeout(80);
+  const reducedAfterInputFrames = await desktop.evaluate(() => window.__dynamicDrawTimes.length);
+
+  const result = {
+    compact,
+    expanded,
+    mobileUtility,
+    shortViewport,
+    selection: {
+      baselinePowerStrokes,
+      baselineHash,
+      selectedHash,
+      ...selected,
+    },
+    utilityRemoval,
+    reducedMotion: { idleFrames: reducedIdleFrames, framesAfterInput: reducedAfterInputFrames },
+    errors,
+  };
+  console.log(JSON.stringify(result, null, 2));
+
+  if (!compact.compact) throw new Error('Mobile mission does not start compact');
+  if (compact.toggleHeight < 44) throw new Error(`Mission toggle is below 44px: ${compact.toggleHeight}`);
+  if (compact.overflow > 0 || expanded.overflow > 0) throw new Error(`Horizontal overflow: compact=${compact.overflow}, expanded=${expanded.overflow}`);
+  if (!expanded.expanded) throw new Error('Mission edge did not expand the mission card');
+  if(shortViewport.horizontal||shortViewport.vertical||shortViewport.boardHeight<150||shortViewport.dockBottom>568.5)throw new Error(`Short mobile viewport failed: ${JSON.stringify(shortViewport)}`);
+  if (!selected.inspector || selected.title !== '반짝 발전소') throw new Error(`Facility selection failed: ${JSON.stringify(selected)}`);
+  if(utilityRemoval.before!==1||utilityRemoval.after!==0||utilityRemoval.refund<=0||!utilityRemoval.guide.includes('교차'))throw new Error(`2D utility removal failed: ${JSON.stringify(utilityRemoval)}`);
+  if (selected.powerStrokes <= baselinePowerStrokes) throw new Error(`Selected power network did not gain strokes: ${baselinePowerStrokes} -> ${selected.powerStrokes}`);
+  if (!selected.glowingPowerStrokes) throw new Error('Selected power network has no high-emphasis stroke');
+  if (selectedHash === baselineHash) throw new Error('Canvas frame did not visibly change after facility selection');
+  if (reducedIdleFrames > 1) throw new Error(`Reduced-motion animation kept drawing: ${reducedIdleFrames} idle frames`);
+  if (reducedAfterInputFrames < 1) throw new Error('Reduced-motion dirty frame did not respond to pointer input');
+  if (errors.length) throw new Error(`Console errors: ${errors.join('; ')}`);
+
+  await browser.close();
+})().catch(error => { console.error(error); process.exit(1); });

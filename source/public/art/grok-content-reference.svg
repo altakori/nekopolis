@@ -1,0 +1,252 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" width="1200" height="600">
+  <title>Dusk Cat-City Isometric Trio</title>
+  <desc>Three original isometric 2.5D dusk cat-city subjects in one row: Catnip Tea House, Recycling Workshop, and Dusk Courier Beacon on subtle diamond ground pads.</desc>
+  <defs>
+    <linearGradient id="duskWarm" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f0a060" stop-opacity="0.55"/>
+      <stop offset="55%" stop-color="#c87850" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#6a8aaa" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="copperBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c47a4a"/>
+      <stop offset="100%" stop-color="#8a4e2e"/>
+    </linearGradient>
+    <linearGradient id="copperSide" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a86238"/>
+      <stop offset="100%" stop-color="#6e3a22"/>
+    </linearGradient>
+    <linearGradient id="clayFront" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c9a07a"/>
+      <stop offset="100%" stop-color="#9a7352"/>
+    </linearGradient>
+    <linearGradient id="claySide" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a88460"/>
+      <stop offset="100%" stop-color="#7a5a40"/>
+    </linearGradient>
+    <linearGradient id="slateTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6d7a86"/>
+      <stop offset="100%" stop-color="#4a5560"/>
+    </linearGradient>
+    <linearGradient id="slateFront" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5a6670"/>
+      <stop offset="100%" stop-color="#3a444c"/>
+    </linearGradient>
+    <linearGradient id="slateSide" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4a545c"/>
+      <stop offset="100%" stop-color="#2e363c"/>
+    </linearGradient>
+    <linearGradient id="shaftGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7fd0d8" stop-opacity="0.55"/>
+      <stop offset="70%" stop-color="#4aa8b0" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#2a7080" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="lanternGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffd090" stop-opacity="0.9"/>
+      <stop offset="60%" stop-color="#f0a040" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#d08030" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="beaconCore" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#ffe8b0" stop-opacity="0.95"/>
+      <stop offset="55%" stop-color="#f0b060" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#c87840" stop-opacity="0.15"/>
+    </radialGradient>
+  </defs>
+
+  <!-- ================= LEFT PAD + CATNIP TEA HOUSE ================= -->
+  <g id="tea-house">
+    <!-- diamond ground pad -->
+    <polygon points="200,470 320,410 440,470 320,530" fill="#3a4a55" opacity="0.28"/>
+    <polygon points="200,470 320,410 440,470 320,500" fill="#4a5c68" opacity="0.18"/>
+
+    <!-- clay base walls (isometric box) -->
+    <polygon points="250,420 320,385 390,420 320,455" fill="#6a5040"/>
+    <polygon points="250,420 320,455 320,500 250,465" fill="url(#claySide)"/>
+    <polygon points="320,455 390,420 390,465 320,500" fill="url(#clayFront)"/>
+
+    <!-- copper round teapot body (isometric ellipse stack) -->
+    <ellipse cx="320" cy="360" rx="78" ry="34" fill="url(#copperBody)"/>
+    <path d="M242,360 C242,330 275,305 320,305 C365,305 398,330 398,360 L398,390 C398,420 365,445 320,445 C275,445 242,420 242,390 Z" fill="url(#copperBody)"/>
+    <path d="M320,305 C365,305 398,330 398,360 C398,390 365,415 320,415 C320,415 320,305 320,305 Z" fill="url(#copperSide)"/>
+    <ellipse cx="320" cy="390" rx="78" ry="34" fill="#7a4528" opacity="0.35"/>
+
+    <!-- short spout awning (right-front) -->
+    <path d="M390,355 L455,340 L470,355 L455,375 L390,375 Z" fill="#b06a3a"/>
+    <path d="M390,355 L455,340 L455,360 L390,375 Z" fill="#8a4e28"/>
+    <polygon points="455,340 470,355 455,375 440,360" fill="#c47a48"/>
+    <!-- spout underside shadow -->
+    <path d="M390,370 L450,370 L455,375 L390,375 Z" fill="#5a3018" opacity="0.35"/>
+
+    <!-- lid roof -->
+    <ellipse cx="320" cy="300" rx="70" ry="28" fill="#a8683a"/>
+    <path d="M250,300 C250,278 280,260 320,260 C360,260 390,278 390,300" fill="#c88850"/>
+    <ellipse cx="320" cy="260" rx="42" ry="16" fill="#d49860"/>
+    <!-- lid rim ring -->
+    <ellipse cx="320" cy="300" rx="70" ry="28" fill="none" stroke="#6e3a20" stroke-width="3" opacity="0.45"/>
+
+    <!-- geometric cat-ear steam finial -->
+    <polygon points="305,248 320,210 335,248" fill="#e8c090"/>
+    <polygon points="320,210 335,248 320,248" fill="#c89868"/>
+    <polygon points="300,238 312,215 318,238" fill="#f0d0a0"/>
+    <polygon points="322,238 328,215 340,238" fill="#d8a878"/>
+    <!-- finial base knob -->
+    <ellipse cx="320" cy="250" rx="10" ry="5" fill="#b87848"/>
+
+    <!-- soft vector steam rings -->
+    <ellipse cx="300" cy="185" rx="18" ry="7" fill="none" stroke="#d8e0e8" stroke-width="2.5" opacity="0.45"/>
+    <ellipse cx="328" cy="165" rx="14" ry="5.5" fill="none" stroke="#d0dce6" stroke-width="2" opacity="0.38"/>
+    <ellipse cx="345" cy="145" rx="11" ry="4.5" fill="none" stroke="#c8d6e0" stroke-width="1.8" opacity="0.3"/>
+    <ellipse cx="290" cy="155" rx="10" ry="4" fill="none" stroke="#d0dce4" stroke-width="1.6" opacity="0.28"/>
+
+    <!-- porch ledge -->
+    <polygon points="270,455 320,430 370,455 320,480" fill="#8a6a4a"/>
+    <polygon points="270,455 320,480 320,490 270,465" fill="#6a5038"/>
+    <polygon points="320,480 370,455 370,465 320,490" fill="#7a5a40"/>
+
+    <!-- two warm porch lanterns -->
+    <ellipse cx="285" cy="448" rx="16" ry="10" fill="url(#lanternGlow)"/>
+    <rect x="278" y="438" width="14" height="18" rx="3" fill="#e8a850"/>
+    <rect x="280" y="440" width="10" height="14" rx="2" fill="#ffd078"/>
+    <polygon points="276,438 292,438 285,430" fill="#c87838"/>
+    <ellipse cx="285" cy="456" rx="8" ry="3" fill="#a86030"/>
+
+    <ellipse cx="355" cy="448" rx="16" ry="10" fill="url(#lanternGlow)"/>
+    <rect x="348" y="438" width="14" height="18" rx="3" fill="#e8a850"/>
+    <rect x="350" y="440" width="10" height="14" rx="2" fill="#ffd078"/>
+    <polygon points="346,438 362,438 355,430" fill="#c87838"/>
+    <ellipse cx="355" cy="456" rx="8" ry="3" fill="#a86030"/>
+
+    <!-- door notch -->
+    <polygon points="305,470 320,460 335,470 335,495 305,495" fill="#4a3020"/>
+    <polygon points="320,460 335,470 335,495 320,485" fill="#3a2418"/>
+    <ellipse cx="328" cy="480" rx="2" ry="3" fill="#d4a060"/>
+
+    <!-- warm rim highlight upper-left -->
+    <path d="M250,360 C260,320 290,300 320,298" fill="none" stroke="#f0c090" stroke-width="3" opacity="0.35" stroke-linecap="round"/>
+  </g>
+
+  <!-- ================= CENTER PAD + RECYCLING WORKSHOP ================= -->
+  <g id="recycling-workshop">
+    <!-- diamond ground pad -->
+    <polygon points="480,480 600,420 720,480 600,540" fill="#3a4a55" opacity="0.28"/>
+    <polygon points="480,480 600,420 720,480 600,510" fill="#4a5c68" opacity="0.18"/>
+
+    <!-- main boxy shop body -->
+    <polygon points="520,400 600,360 680,400 600,440" fill="url(#slateTop)"/>
+    <polygon points="520,400 600,440 600,510 520,470" fill="url(#slateSide)"/>
+    <polygon points="600,440 680,400 680,470 600,510" fill="url(#slateFront)"/>
+
+    <!-- reverse-triangle roof intake hopper -->
+    <polygon points="560,360 600,300 640,360 600,380" fill="#7a8a96"/>
+    <polygon points="560,360 600,380 600,400 560,380" fill="#5a6a76"/>
+    <polygon points="600,380 640,360 640,380 600,400" fill="#4a5a66"/>
+    <!-- hopper mouth -->
+    <polygon points="580,330 600,305 620,330 600,345" fill="#2a343c"/>
+    <polygon points="585,328 600,312 615,328 600,338" fill="#3a4850"/>
+
+    <!-- side cylinder sorter (left) -->
+    <ellipse cx="505" cy="430" rx="28" ry="14" fill="#6a7884"/>
+    <path d="M477,430 L477,480 C477,495 490,505 505,505 C520,505 533,495 533,480 L533,430" fill="#4a5864"/>
+    <path d="M505,430 L533,430 L533,480 C533,495 520,505 505,505 Z" fill="#3a4854"/>
+    <ellipse cx="505" cy="480" rx="28" ry="14" fill="#2e3a44" opacity="0.5"/>
+    <ellipse cx="505" cy="430" rx="28" ry="14" fill="#7a8a96"/>
+    <!-- cylinder bands -->
+    <ellipse cx="505" cy="450" rx="28" ry="14" fill="none" stroke="#2a343c" stroke-width="2" opacity="0.5"/>
+    <ellipse cx="505" cy="465" rx="28" ry="14" fill="none" stroke="#2a343c" stroke-width="2" opacity="0.4"/>
+    <!-- top cap -->
+    <ellipse cx="505" cy="422" rx="20" ry="9" fill="#8a9aa6"/>
+
+    <!-- short conveyor tongue (front-right) -->
+    <polygon points="660,470 720,445 735,455 675,480" fill="#5a6670"/>
+    <polygon points="660,470 675,480 675,495 660,485" fill="#3a444c"/>
+    <polygon points="675,480 735,455 735,470 675,495" fill="#4a545c"/>
+    <!-- belt slats -->
+    <line x1="670" y1="472" x2="725" y2="450" stroke="#2a343c" stroke-width="2" opacity="0.55"/>
+    <line x1="668" y1="478" x2="723" y2="456" stroke="#2a343c" stroke-width="2" opacity="0.45"/>
+    <line x1="666" y1="484" x2="721" y2="462" stroke="#2a343c" stroke-width="2" opacity="0.4"/>
+
+    <!-- three geometric colored bin notches (front face) -->
+    <polygon points="575,470 595,460 595,495 575,505" fill="#3a8a5a"/>
+    <polygon points="595,460 605,465 605,500 595,495" fill="#2a6a42"/>
+    <polygon points="610,465 630,455 630,490 610,500" fill="#3a6aaa"/>
+    <polygon points="630,455 640,460 640,495 630,490" fill="#2a4a8a"/>
+    <polygon points="645,460 665,450 665,485 645,495" fill="#b87830"/>
+    <polygon points="665,450 675,455 675,490 665,485" fill="#8a5820"/>
+
+    <!-- amber safety stripe -->
+    <polygon points="525,430 595,395 600,400 530,435" fill="#e0a030"/>
+    <polygon points="530,435 600,400 600,412 530,447" fill="#c88820"/>
+    <polygon points="535,448 595,418 600,424 540,454" fill="#f0b840" opacity="0.85"/>
+
+    <!-- scrap crates -->
+    <polygon points="700,500 725,488 745,500 720,512" fill="#6a5a48"/>
+    <polygon points="700,500 720,512 720,530 700,518" fill="#4a3e32"/>
+    <polygon points="720,512 745,500 745,518 720,530" fill="#5a4a3a"/>
+    <polygon points="680,515 700,505 715,515 695,525" fill="#7a6a50"/>
+    <polygon points="680,515 695,525 695,540 680,530" fill="#5a4e3c"/>
+    <polygon points="695,525 715,515 715,530 695,540" fill="#6a5a44"/>
+
+    <!-- door / bay -->
+    <polygon points="615,480 645,465 645,505 615,520" fill="#1e282e"/>
+    <polygon points="645,465 655,470 655,510 645,505" fill="#151c22"/>
+
+    <!-- upper-left warm rim -->
+    <path d="M520,400 L560,375 L600,360" fill="none" stroke="#e8b888" stroke-width="2.5" opacity="0.3" stroke-linecap="round"/>
+  </g>
+
+  <!-- ================= RIGHT PAD + DUSK COURIER BEACON ================= -->
+  <g id="courier-beacon">
+    <!-- diamond ground pad -->
+    <polygon points="820,475 940,415 1060,475 940,535" fill="#3a4a55" opacity="0.28"/>
+    <polygon points="820,475 940,415 1060,475 940,505" fill="#4a5c68" opacity="0.18"/>
+
+    <!-- tiny ground decal -->
+    <ellipse cx="940" cy="490" rx="36" ry="14" fill="#2a6a72" opacity="0.35"/>
+    <ellipse cx="940" cy="490" rx="22" ry="8" fill="#3a8a92" opacity="0.4"/>
+    <ellipse cx="940" cy="490" rx="10" ry="4" fill="#5ab0b8" opacity="0.5"/>
+
+    <!-- translucent vertical light shaft -->
+    <polygon points="910,200 970,200 1005,490 875,490" fill="url(#shaftGrad)"/>
+    <polygon points="925,210 955,210 975,480 905,480" fill="#8fd8e0" opacity="0.12"/>
+
+    <!-- floating isometric diamond pin outer structure -->
+    <!-- aqua outer ring (isometric torus-like diamond ring via ellipses + arcs) -->
+    <ellipse cx="940" cy="280" rx="70" ry="28" fill="none" stroke="#3a9aa4" stroke-width="14" opacity="0.85"/>
+    <ellipse cx="940" cy="280" rx="70" ry="28" fill="none" stroke="#5ec4ce" stroke-width="8" opacity="0.9"/>
+    <ellipse cx="940" cy="280" rx="70" ry="28" fill="none" stroke="#8ae0e8" stroke-width="3" opacity="0.7"/>
+    <!-- ring thickness sides for 2.5D -->
+    <path d="M870,280 A70,28 0 0,0 1010,280 L1010,292 A70,28 0 0,1 870,292 Z" fill="#2a7880" opacity="0.55"/>
+    <path d="M870,280 A70,28 0 0,1 1010,280" fill="none" stroke="#a8f0f4" stroke-width="2.5" opacity="0.55"/>
+
+    <!-- warm inner paw-notch from circles/ovals only -->
+    <ellipse cx="940" cy="280" rx="38" ry="16" fill="url(#beaconCore)"/>
+    <!-- main pad oval -->
+    <ellipse cx="940" cy="286" rx="22" ry="11" fill="#f0b060"/>
+    <ellipse cx="940" cy="284" rx="18" ry="9" fill="#ffd090"/>
+    <!-- toe ovals -->
+    <ellipse cx="918" cy="272" rx="8" ry="7" fill="#f0b060"/>
+    <ellipse cx="918" cy="271" rx="6" ry="5" fill="#ffe0a8"/>
+    <ellipse cx="930" cy="265" rx="7.5" ry="6.5" fill="#f0b060"/>
+    <ellipse cx="930" cy="264" rx="5.5" ry="4.5" fill="#ffe0a8"/>
+    <ellipse cx="950" cy="265" rx="7.5" ry="6.5" fill="#f0b060"/>
+    <ellipse cx="950" cy="264" rx="5.5" ry="4.5" fill="#ffe0a8"/>
+    <ellipse cx="962" cy="272" rx="8" ry="7" fill="#f0b060"/>
+    <ellipse cx="962" cy="271" rx="6" ry="5" fill="#ffe0a8"/>
+    <!-- soft inner glow -->
+    <ellipse cx="940" cy="278" rx="12" ry="6" fill="#fff6d8" opacity="0.75"/>
+
+    <!-- diamond pin tip floating above ring -->
+    <ellipse cx="940" cy="230" rx="16" ry="7" fill="#4ab0b8"/>
+    <path d="M924,230 L940,195 L956,230 Z" fill="#5ec8d0"/>
+    <path d="M940,195 L956,230 L940,230 Z" fill="#3a98a0"/>
+    <ellipse cx="940" cy="195" rx="5" ry="2.5" fill="#a8eef4"/>
+    <!-- pin stem -->
+    <rect x="936" y="228" width="8" height="30" rx="2" fill="#4aa8b0"/>
+    <rect x="938" y="228" width="3" height="30" rx="1" fill="#7ad4dc" opacity="0.5"/>
+
+    <!-- floating shadow under beacon -->
+    <ellipse cx="940" cy="318" rx="48" ry="12" fill="#1a3038" opacity="0.25"/>
+
+    <!-- warm upper-left rim on ring -->
+    <path d="M880,268 A70,28 0 0,1 980,255" fill="none" stroke="#f0c8a0" stroke-width="2.5" opacity="0.4" stroke-linecap="round"/>
+  </g>
+</svg>
